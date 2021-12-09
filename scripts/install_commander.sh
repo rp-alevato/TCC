@@ -1,8 +1,18 @@
-printf "**** Fazendo o download do Simplicity Commander ****\n"
+#!/bin/bash
+
+commander_path=$HOME/SimplicityCommander
+
+echo -e "\n*** Downloading Simplicity Commander ***\n"
+mkdir $commander_path
+cd $commander_path
 wget https://www.silabs.com/documents/public/software/SimplicityCommander-Linux.zip
-printf "**** Instalando o Simplicity Commander ****\n"
+
+echo -e "\n*** Installing Simplicity Commander ***\n"
 unzip *.zip
-cd SimplicityCommander-Linux
+mv $commander_path/SimplicityCommander-Linux/* $commander_path
+rmdir $commander_path/SimplicityCommander-Linux
 tar -xvf *.tar.bz
-cd ../
-rm *.zip
+
+echo -e "\n*** Removing .tar.bz and .zip ***\n"
+rm *.tar.bz
+rm *.zip*
