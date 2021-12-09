@@ -1,22 +1,23 @@
 /* Este exemplo mostra como a biblioteca é utilizada. Ex.: Como inicializar os estimadores, */
 /* como carregar as amostras de IQ, como produzir uma estimativa de ângulo, etc. */
 
-#include <stdio.h> // fopen()
 #include "doa.h"
+
+#include <stdio.h>  // fopen()
 
 #define IQFILE "iqsamplesnew.txt"
 
 // Allocate 2D float Buffer for IQ samples
-int allocate2DFloatBuffer (float*** buf, int rows, int cols){
+int allocate2DFloatBuffer(float*** buf, int rows, int cols) {
 
-    *buf = (float**) malloc (sizeof(float*)*rows);
-    if (*buf == NULL){
+    *buf = (float**)malloc(sizeof(float*) * rows);
+    if (*buf == NULL) {
         return 0;
     }
 
-    for (int i = 0; i < rows; i++){
-        (*buf)[i] = (float*) malloc(sizeof(float)*cols);
-        if ((*buf)[i] == NULL){
+    for (int i = 0; i < rows; i++) {
+        (*buf)[i] = (float*)malloc(sizeof(float) * cols);
+        if ((*buf)[i] == NULL) {
             return 0;
         }
     }
@@ -24,8 +25,7 @@ int allocate2DFloatBuffer (float*** buf, int rows, int cols){
     return 1;
 }
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const* argv[]) {
     // Load IQ samples from file
     float** i_samples;
     float** q_samples;
@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
     FILE* fp;
 
     fp = fopen(IQFILE, "r");
-    if (fp == NULL){
+    if (fp == NULL) {
         printf("Error in opening file\n");
         return -1;
     }
@@ -54,7 +54,7 @@ int main(int argc, char const *argv[])
     int n = 0;
     int k = 0;
 
-    while(fgets(iqsampleline, 30, fp) != NULL){
+    while (fgets(iqsampleline, 30, fp) != NULL) {
         // Read one IQ sample as a strings
         i_samplech = strtok(iqsampleline, ",\n");
         q_samplech = strtok(NULL, ",\n");
@@ -68,7 +68,7 @@ int main(int argc, char const *argv[])
         q_samples[k][n] = atof(q_samplesch);
 
         n++;
-        if (n == NUM_ANTENNAS){
+        if (n == NUM_ANTENNAS) {
             n = 0;
             k++;
         }

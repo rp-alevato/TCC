@@ -1,4 +1,4 @@
-/***********************************************************************************************//**
+/***************************************************************************************************
  * @file   aox.c
  * @brief  Module responsible for processing IQ samples and calculate angle estimation from them
  *         using the AoX library
@@ -12,7 +12,7 @@
  * you in Source Code format and is governed by the sections of the MSLA applicable to Source Code.
  **************************************************************************************************/
 
-// standard library headers
+// Standard library headers
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+// BGAPI libraries
 #include "bg_types.h"
 #include "aox.h"
 #include "doa.h"

@@ -1,4 +1,4 @@
-/***********************************************************************************************//**
+/***************************************************************************************************
  * @file   common.h
  * @brief  Common header file for different threads to enable communication between them
  ***************************************************************************************************
@@ -16,27 +16,27 @@
 
 #include <pthread.h>
 
-#define MUTEX_T             pthread_mutex_t
-#define CONDITION_T         pthread_cond_t
-#define THREAD_RETURN_T     void*
+#define MUTEX_T         pthread_mutex_t
+#define CONDITION_T     pthread_cond_t
+#define THREAD_RETURN_T void*
 
-#define ENTER_MUTEX(m)      pthread_mutex_lock(m)
-#define EXIT_MUTEX(m)       pthread_mutex_unlock(m)
-#define CONDITION_WAIT(c,m) pthread_cond_wait(c,m)
-#define CONDITION_MET(c)    pthread_cond_broadcast(c)
-#define THREAD_EXIT         pthread_exit(NULL)
+#define ENTER_MUTEX(m)       pthread_mutex_lock(m)
+#define EXIT_MUTEX(m)        pthread_mutex_unlock(m)
+#define CONDITION_WAIT(c, m) pthread_cond_wait(c, m)
+#define CONDITION_MET(c)     pthread_cond_broadcast(c)
+#define THREAD_EXIT          pthread_exit(NULL)
 
-/***********************************************************************************************//**
+/***************************************************************************************************
  * \defgroup app Application Code
  * \brief Sample Application Implementation
  **************************************************************************************************/
 
-/***********************************************************************************************//**
+/***************************************************************************************************
  * @addtogroup Application
  * @{
  **************************************************************************************************/
 
-/***********************************************************************************************//**
+/***************************************************************************************************
  * @addtogroup app
  * @{
  **************************************************************************************************/
@@ -46,8 +46,8 @@
  **************************************************************************************************/
 
 typedef struct arguments {
-  int    argc;
-  char** argv;
+    int argc;
+    char** argv;
 } arguments_t;
 
 typedef enum {
@@ -62,19 +62,22 @@ typedef enum {
  **************************************************************************************************/
 
 // Mutexes
-extern MUTEX_T     iqSamplesCriticalSection;
-extern MUTEX_T     bgBufferCriticalSection;
-extern MUTEX_T     printfCriticalSection;
+extern MUTEX_T iqSamplesCriticalSection;
+extern MUTEX_T bgBufferCriticalSection;
+extern MUTEX_T printfCriticalSection;
 #ifndef WINDOWS
-extern MUTEX_T     newSamplesAvailableMutex;
+extern MUTEX_T newSamplesAvailableMutex;
 #endif
 
-//Conditional variable
+// Conditional variable
 extern CONDITION_T newSamplesAvailable;
 
 // Application state
 extern eAOX_APP_CTRL eAppCtrl;
 
-#define printLog(...) ENTER_MUTEX(&printfCriticalSection); printf(__VA_ARGS__); EXIT_MUTEX(&printfCriticalSection);
+#define printLog(...)                    \
+    ENTER_MUTEX(&printfCriticalSection); \
+    printf(__VA_ARGS__);                 \
+    EXIT_MUTEX(&printfCriticalSection);
 
 #endif /* COMMON_H */
