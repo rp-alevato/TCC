@@ -25,14 +25,14 @@ Após a instalação do Commander:
 
 2. Desconecte o kit da âncora e conecte apenas o kit da tag em uma porta USB e execute
     ```
-    ./flash.sh ../tag_firmware/bin/tag-firmware.s37
+    ./scripts/flash.sh -f tag_firmware/bin/tag-firmware.s37
     ```
 
 3. Desconecte o kit da tag e conecte novamente o Kit da âncora e verifique qual porta VCOM foi conectado (Ex.: /dev/ttyACM0).
 
 4. Compile e execute a aplicação principal
     ```
-    cd main_application/
+    cd main_app/
     make
     cd exe
     ./locator-host /dev/ttyACM0
