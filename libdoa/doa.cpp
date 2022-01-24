@@ -7,9 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-using namespace std;
-
-#define SPEED_OF_LIGHT 299792458  // Speed of light in meters/second
+#define LIGHT_SPEED 299792458  // Speed of light in meters/second
 
 /**
  * Direction of Arrival estimation library. MUSIC and ESPRIT algorithms for a 16-element Uniform Rectangular Array.
@@ -26,22 +24,25 @@ void aoa_estimator::initDoAEstimator(float elements_distance, int debug_flag) {
 };
 
 float aoa_estimator::calculate_wavelength(float channel_frequency) {
-    return SPEED_OF_LIGHT / channel_frequency;
+    return LIGHT_SPEED / channel_frequency;
 }
 
+// The board gets 7 samples from the incoming signal to calculate carrier and CTE frequency.
+// This allows to correct for phase differences (practical matter)
+// reference_period_length is number of these samples (ideally 7)
 float aoa_estimator::estimate_phase_rotation(float* i_samples, float* q_samples, int reference_period_length) {
     float sample_phase = 0;
     float next_sample_phase = 0;
     float phase_difference = 0;
     float phase_difference_acc = 0;
     for (int sample = 0; sample < (reference_period_length - 1); sample++) {
-        sample_phase = atan2(q_samples[sample], i_samples[sample]);
-        next_sample_phase = atan2(q_samples[sample + 1], i_samples[sample + 1]);
-        phase_difference = atan2(sin(next_sample_phase - sample_phase), cos(next_sample_phase - sample_phase));
-        phase_difference_acc += atan2(sin(phase_difference), cos(phase_difference));
+        sample_phase = std::atan2(q_samples[sample], i_samples[sample]);
+        next_sample_phase = std::atan2(q_samples[sample + 1], i_samples[sample + 1]);
+        phase_difference = std::atan2(std::sin(next_sample_phase - sample_phase), std::cos(next_sample_phase - sample_phase));
+        phase_difference_acc += std::atan2(std::sin(phase_difference), std::cos(phase_difference));
     }
     phase_difference_acc /= (reference_period_length - 1);
-    phase_difference_acc *= 2 * 180 / PI_CTE;
+    phase_difference_acc *= 2 * 180 / M_PI;
 
     return phase_difference_acc;
 }
@@ -49,15 +50,16 @@ float aoa_estimator::estimate_phase_rotation(float* i_samples, float* q_samples,
 void aoa_estimator::compensateRotation(float phase_rotation, int debug_flag) {
 
     std::complex<double> phase_rot;
-    phase_rot = {0, PI_CTE * phase_rotation / 180};
+    phase_rot = {0, M_PI * phase_rotation / 180};
 
     for (int antenna = 0; antenna < NUM_ANTENNAS; antenna++) {
         for (int snapshot = 0; snapshot < IQLENGTH; snapshot++) {
-            this->x(antenna, snapshot) = (this->x(antenna, snapshot)) * (exp((std::complex<double>(antenna, 0)) * phase_rot));
+            this->x(antenna, snapshot) = (this->x(antenna, snapshot)) * (std::exp((std::complex<double>(antenna, 0)) * phase_rot));
         }
     }
 }
 
+// Transforms floats into a complex
 void aoa_estimator::load_x(float** i_samples, float** q_samples, int num_antennas, int num_samples, int debug_flag) {
 
     // Auxiliary complex variable
@@ -73,6 +75,7 @@ void aoa_estimator::load_x(float** i_samples, float** q_samples, int num_antenna
     }
 }
 
+// Corresponds to equation 2.31 from Pedro's TCC. It's the autocorrelation matrix
 void aoa_estimator::estimateRxx(int debug_flag) {
 
     // Estimate covariance matrix
@@ -90,7 +93,9 @@ void aoa_estimator::estimateRxx(int debug_flag) {
             index = n;
         }
     }
+    // End of Rxx estimation
 
+    // Equation 2.33 (Pedro's TCC)
     this->Qn.block(0, 0, 16, index) = eigensolver.eigenvectors().block(0, 0, 16, index);
     this->Qn.block(0, index, 16, this->antenna_num - (index + 1)) = eigensolver.eigenvectors().block(0, index + 1, 16, this->antenna_num - (index + 1));
 
@@ -102,15 +107,15 @@ void aoa_estimator::estimateRxx(int debug_flag) {
 
 void aoa_estimator::updateSteeringVector(float azimuth, float elevation, int debug_flag) {
 
-    this->x_st = 2 * PI_CTE * this->distance * sin(elevation) * cos(azimuth);
-    this->y_st = 2 * PI_CTE * this->distance * sin(elevation) * sin(azimuth);
+    this->x_st = 2 * M_PI * this->distance * std::sin(elevation) * std::cos(azimuth);
+    this->y_st = 2 * M_PI * this->distance * std::sin(elevation) * std::sin(azimuth);
 
     this->phi_x = {0, this->x_st};
     this->phi_y = {0, this->y_st};
 
     for (int n = 0; n < 4; n++) {
-        this->a_x(0, n) = exp((std::complex<float>(n, 0)) * this->phi_x);
-        this->a_y(0, n) = exp((std::complex<float>(n, 0)) * this->phi_y);
+        this->a_x(0, n) = std::exp((std::complex<float>(n, 0)) * this->phi_x);
+        this->a_y(0, n) = std::exp((std::complex<float>(n, 0)) * this->phi_y);
     }
 
     for (int n = 0; n < 4; n++) {
@@ -221,6 +226,7 @@ void aoa_estimator::initSelectionMatrices(int debug_flag) {
 
 void aoa_estimator::processESPRIT(float channel_frequency, int debug_flag) {
 
+    // Equations 2.35 e 2.36 (Pedro's TCC)
     this->Qs_1x = (this->Js_1x) * (this->Qs);
     this->Qs_2x = (this->Js_2x) * (this->Qs);
     this->Qs_1y = (this->Js_1y) * (this->Qs);
@@ -230,21 +236,21 @@ void aoa_estimator::processESPRIT(float channel_frequency, int debug_flag) {
     this->phi_Y_LS = ((this->Qs_1y.adjoint() * this->Qs_1y).inverse()) * ((this->Qs_1y.adjoint()) * Qs_2y);
 
     float A, B, azimuth, elevation, wavelength;
-    A = arg(this->phi_Y_LS(0, 0));
-    B = arg(this->phi_X_LS(0, 0));
-    azimuth = atan2(B, A);
+    A = std::arg(this->phi_Y_LS(0, 0));
+    B = std::arg(this->phi_X_LS(0, 0));
+    azimuth = std::atan2(B, A);
     wavelength = calculate_wavelength(channel_frequency);
-    // elevation = asin(A/(2*PI_CTE*(this->distance/wavelength)*sin(azimuth))); // Eq. 1
+    // elevation = astd::sin(A/(2*M_PI*(this->distance/wavelength)*std::sin(azimuth))); // Eq. 1
 
-    // Forçando a barra na cara dura. Quando o argumento A/(2*PI_CTE*(this->distance/wavelength)*sin(azimuth)) é maior que 1 em (Eq. 1)
+    // Forçando a barra na cara dura. Quando o argumento A/(2*M_PI*(this->distance/wavelength)*std::sin(azimuth)) é maior que 1 em (Eq. 1)
     // o resultado é nan, já que a função arco seno não está definida para valores fora do intervalo [-1,1]
     // Mas, se trocarmos pela função arco seno (std::asin do header <complex>) que aceita numeros complexos, ela está definida para valores maiores
     // que 1. Ainda não sei justificar, mas pegando a saída desta função e tirando o módulo o resultado faz sentido.
-    std::complex<double> elevation_input(A / (2 * PI_CTE * (this->distance / wavelength) * sin(azimuth)), 0);
+    std::complex<double> elevation_input(A / (2 * M_PI * (this->distance / wavelength) * std::sin(azimuth)), 0);
     elevation = std::abs(std::acos(elevation_input));
 
-    this->az_esprit = 180 * azimuth / PI_CTE;
-    this->el_esprit = 180 * elevation / PI_CTE;
+    this->az_esprit = 180 * azimuth / M_PI;
+    this->el_esprit = 180 * elevation / M_PI;
 }
 
 void aoa_estimator::getProcessed(int algorithm, float* az, float* el) {
@@ -253,7 +259,7 @@ void aoa_estimator::getProcessed(int algorithm, float* az, float* el) {
         *el = this->el_esprit;
     }
     if (algorithm == 2) {
-        *az = 180 * this->az_index / PI_CTE;
-        *el = 180 * this->el_index / PI_CTE;
+        *az = 180 * this->az_index / M_PI;
+        *el = 180 * this->el_index / M_PI;
     }
 }

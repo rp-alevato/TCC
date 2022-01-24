@@ -5,11 +5,11 @@
 
 #include <stdio.h>  // fopen()
 
-#define IQFILE "iqsamplesnew.txt"
+#define IQFILE "iqsamples.txt"
 
 // Allocate 2D float Buffer for IQ samples
 int allocate2DFloatBuffer(float*** buf, int rows, int cols) {
-
+    // TODO change to new
     *buf = (float**)malloc(sizeof(float*) * rows);
     if (*buf == NULL) {
         return 0;
@@ -78,7 +78,7 @@ int main(int argc, char const* argv[]) {
 
     // Initialize the estimator with specific element distance
     auto doa_estimator = aoa_estimator();
-    float elements_distance = 0.32;
+    float elements_distance = 0.04;
     doa_estimator.initDoAEstimator(elements_distance, 0);
 
     // Initialize selection matrices used in ESPRIT algorithm
@@ -94,7 +94,7 @@ int main(int argc, char const* argv[]) {
     // Estimate covariance matrix
     doa_estimator.estimateRxx(0);
 
-    doa_estimator.processESPRIT(0);
+    doa_estimator.processESPRIT(2444000000, 0);
 
     float azimuth, elevation;
 
