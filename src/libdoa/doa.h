@@ -1,13 +1,11 @@
-#include "eigen/Eigen/Core"
-#include "eigen/Eigen/Dense"
-#include "eigen/Eigen/Eigenvalues"
+#include <Eigen/Dense>
 
 #include <math.h>
 #include <stdlib.h>
 
 #define NUM_ANTENNAS 16
 #define IQLENGTH     4  // The Number of samples used to estimate the DoA
-#define MAX_SAMPSIZE 20
+#define MAX_SAMPSIZE 30
 
 class aoa_estimator {
 
@@ -28,37 +26,37 @@ class aoa_estimator {
     float el_esprit;  // Elevation from ESPRIT algorithm
 
     // Antenna array output. It is the algorithm input
-    Eigen::MatrixXcd x {NUM_ANTENNAS, IQLENGTH};
+    Eigen::Matrix<std::complex<double>, 16, 4> x;
 
     // Input signal autocorrelation matrix
-    Eigen::MatrixXcd Rxx {NUM_ANTENNAS, NUM_ANTENNAS};
-    Eigen::MatrixXcd Qn {16, 15};  // Noise eigenvectors. MUSIC related
-    Eigen::MatrixXcd Qs {16, 1};   // Signal eigenvector
+    Eigen::Matrix<std::complex<double>, 16, 16> Rxx;
+    Eigen::Matrix<std::complex<double>, 16, 15> Qn;  // Noise eigenvectors. MUSIC related
+    Eigen::Matrix<std::complex<double>, 16, 1> Qs;   // Signal eigenvector
 
     float x_st;
     float y_st;
     std::complex<float> phi_x;
     std::complex<float> phi_y;
-    Eigen::MatrixXcd a_x {1, 4};       // steering vector x component
-    Eigen::MatrixXcd a_y {1, 4};       // steering vector y component
-    Eigen::MatrixXcd st_vec {16, 1};   // steering vector
-    Eigen::MatrixXcd Qn_Prd {16, 16};  // Qn times Qn.adjoint(). It should be stored before executing the MUSIC spectrum scanning
-    Eigen::MatrixXcd aux {1, 1};       // Used for the MUSIC spectrum denominator
+    Eigen::Matrix<std::complex<double>, 1, 4> a_x;       // steering vector x component
+    Eigen::Matrix<std::complex<double>, 1, 4> a_y;       // steering vector y component
+    Eigen::Matrix<std::complex<double>, 16, 1> st_vec;   // steering vector
+    Eigen::Matrix<std::complex<double>, 16, 16> Qn_Prd;  // Qn times Qn.adjoint(). It should be stored before executing the MUSIC spectrum scanning
+    Eigen::Matrix<std::complex<double>, 1, 1> aux;       // Used for the MUSIC spectrum denominator
 
     // ESPRIT selection matrices
     // Equações 2.45 e 2.46
-    Eigen::MatrixXcd Js_1y {12, 16};
-    Eigen::MatrixXcd Js_2y {12, 16};
-    Eigen::MatrixXcd Js_1x {12, 16};
-    Eigen::MatrixXcd Js_2x {12, 16};
+    Eigen::Matrix<std::complex<double>, 12, 16> Js_1y;
+    Eigen::Matrix<std::complex<double>, 12, 16> Js_2y;
+    Eigen::Matrix<std::complex<double>, 12, 16> Js_1x;
+    Eigen::Matrix<std::complex<double>, 12, 16> Js_2x;
     // ESPRIT signal matrices
-    Eigen::MatrixXcd Qs_1x {12, 1};
-    Eigen::MatrixXcd Qs_2x {12, 1};
-    Eigen::MatrixXcd Qs_1y {12, 1};
-    Eigen::MatrixXcd Qs_2y {12, 1};
+    Eigen::Matrix<std::complex<double>, 12, 1> Qs_1x;
+    Eigen::Matrix<std::complex<double>, 12, 1> Qs_2x;
+    Eigen::Matrix<std::complex<double>, 12, 1> Qs_1y;
+    Eigen::Matrix<std::complex<double>, 12, 1> Qs_2y;
     // Auxiliary variables for ESPRIT algorithm
-    Eigen::MatrixXcd phi_X_LS {1, 1};
-    Eigen::MatrixXcd phi_Y_LS {1, 1};
+    Eigen::Matrix<std::complex<double>, 1, 1> phi_X_LS;
+    Eigen::Matrix<std::complex<double>, 1, 1> phi_Y_LS;
 
   public:
     // Init DoA estimator

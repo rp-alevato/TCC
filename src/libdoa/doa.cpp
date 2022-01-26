@@ -21,7 +21,7 @@ void aoa_estimator::initDoAEstimator(float elements_distance, int debug_flag) {
 
     /* Distance between antenna array elements */
     this->distance = elements_distance;
-};
+}
 
 float aoa_estimator::calculate_wavelength(float channel_frequency) {
     return LIGHT_SPEED / channel_frequency;
