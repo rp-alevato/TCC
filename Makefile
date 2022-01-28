@@ -13,7 +13,7 @@ OBJECTS:=$(patsubst $(DIR_SOURCE)/%,$(DIR_BUILD)/%, $(SOURCES:.cpp=.o))
 
 # Dependencies
 DEPS_LIBDOA:=$(filter $(DIR_BUILD)/libdoa/%, $(OBJECTS))
-DEPS_SIM:=$(filter $(DIR_BUILD)/sim/%, $(OBJECTS)) $(DEPS_LIBDOA)
+DEPS_SIM:=$(filter $(DIR_BUILD)/simulation/%, $(OBJECTS)) $(DEPS_LIBDOA)
 DEPS_LIVEAPP:=$(filter $(DIR_BUILD)/live_app/%, $(OBJECTS)) $(DEPS_LIBDOA)
 
 # Compiler and its flags
@@ -24,7 +24,11 @@ CXXFLAGS:=-W -Wall -Wno-format -pedantic -g -Ofast -I$(DIR_EIGEN) -I$(DIR_SOURCE
 DEPS:=$(DEPS_LIBDOA:.o=.d)
 include $(DEPS)
 
-all: sim liveapp
+all: sim
+
+run: sim
+	@echo "\nRunning executable sim:"
+	@./sim
 
 sim: $(DEPS_SIM)
 	$(CC) $^ -o $@

@@ -17,7 +17,7 @@ class aoa_estimator {
     int antenna_num = 16;
     float distance = 0.04;  // Distância em m
     float product;
-    float angle_step = 1 * M_PI / 180;
+    float angle_step = 1 * M_PI / 180; // 1º in radians
 
     // Last estimated direction
     float az_index = 0;

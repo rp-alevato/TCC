@@ -90,10 +90,10 @@ void aoa_estimator::estimateRxx(int debug_flag) {
 
     for (int n = 0; n < this->antenna_num; n++) {
         if (eigensolver.eigenvalues()(n) > maximum_value) {
+            maximum_value = eigensolver.eigenvalues()(n);
             index = n;
         }
     }
-    // End of Rxx estimation
 
     // Equation 2.33 (Pedro's TCC)
     this->Qn.block(0, 0, 16, index) = eigensolver.eigenvectors().block(0, 0, 16, index);
@@ -240,7 +240,7 @@ void aoa_estimator::processESPRIT(float channel_frequency, int debug_flag) {
     B = std::arg(this->phi_X_LS(0, 0));
     azimuth = std::atan2(B, A);
     wavelength = calculate_wavelength(channel_frequency);
-    // elevation = astd::sin(A/(2*M_PI*(this->distance/wavelength)*std::sin(azimuth))); // Eq. 1
+    // elevation = std::asin(A/(2*M_PI*(this->distance/wavelength)*std::sin(azimuth))); // Eq. 1
 
     // Forçando a barra na cara dura. Quando o argumento A/(2*M_PI*(this->distance/wavelength)*std::sin(azimuth)) é maior que 1 em (Eq. 1)
     // o resultado é nan, já que a função arco seno não está definida para valores fora do intervalo [-1,1]
