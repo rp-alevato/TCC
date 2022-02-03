@@ -1,5 +1,6 @@
 #include "doa.h"
 
+#include <chrono>
 #include <cmath>
 #include <complex>
 #include <fstream>
@@ -150,11 +151,9 @@ void aoa_estimator::processMUSIC(int azimuth_max, int elevation_max, int debug_f
 
     for (int n_azim = 0; n_azim < azimuth_max; n_azim++) {
         for (int n_elev = 0; n_elev < elevation_max; n_elev++) {
-
             azimuth = n_azim * (this->angle_step);
             elevation = n_elev * (this->angle_step);
             product = MUSICSpectrum(azimuth, elevation, 0);
-
             // Store the last max value and index
             if (product > last_value) {
                 last_value = product;
@@ -167,8 +166,7 @@ void aoa_estimator::processMUSIC(int azimuth_max, int elevation_max, int debug_f
 
 void aoa_estimator::initSelectionMatrices(int debug_flag) {
 
-    this->Js_1y <<
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    this->Js_1y << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -181,8 +179,7 @@ void aoa_estimator::initSelectionMatrices(int debug_flag) {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0;
 
-    this->Js_1x <<
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    this->Js_1x << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -195,8 +192,7 @@ void aoa_estimator::initSelectionMatrices(int debug_flag) {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0;
 
-    this->Js_2y <<
-        0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    this->Js_2y << 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -209,8 +205,7 @@ void aoa_estimator::initSelectionMatrices(int debug_flag) {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
 
-    this->Js_2x <<
-        0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    this->Js_2x << 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

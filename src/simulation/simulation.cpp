@@ -1,13 +1,13 @@
 /* Este exemplo mostra como a biblioteca é utilizada. Ex.: Como inicializar os estimadores, */
 /* como carregar as amostras de IQ, como produzir uma estimativa de ângulo, etc. */
 
-#include <libdoa/doa.h>
+#include "../../libdoa_backup/libdoa/doa.h"
 
-#include <stdio.h>  // fopen()
-#include <iostream>
 #include <chrono>
+#include <iostream>
+#include <stdio.h>  // fopen()
 
-#define IQFILE "samples/iqsamples.txt"
+#define IQFILE "../../samples/iqsamples.txt"
 
 // Allocate 2D float Buffer for IQ samples
 int allocate2DFloatBuffer(float*** buf, int rows, int cols) {
@@ -29,9 +29,9 @@ int allocate2DFloatBuffer(float*** buf, int rows, int cols) {
 
 int main(int argc, char const* argv[]) {
 
-    using std::chrono::high_resolution_clock;
-    using std::chrono::duration_cast;
     using std::chrono::duration;
+    using std::chrono::duration_cast;
+    using std::chrono::high_resolution_clock;
     using std::chrono::milliseconds;
 
     // Load IQ samples from file
@@ -96,26 +96,26 @@ int main(int argc, char const* argv[]) {
 
     auto t1 = high_resolution_clock::now();
 
-    for (int i = 0; i < 10000; i++) {
-        // Load iq samples into the estimator
-        doa_estimator.load_x(i_samples, q_samples, NUM_ANTENNAS, IQLENGTH, 0);
+    // for (int i = 0; i < 10000; i++) {
+    //     // Load iq samples into the estimator
+    //     doa_estimator.load_x(i_samples, q_samples, NUM_ANTENNAS, IQLENGTH, 0);
+    //     // Compensate phase rotation from IQ samples
+    //     float phase_rotation = -179.117203;
+    //     doa_estimator.compensateRotation(phase_rotation, 0);
+    //     // Estimate covariance matrix
+    //     doa_estimator.estimateRxx(0);
+    //     doa_estimator.processESPRIT(2444000000, 0);
+    //     doa_estimator.getProcessed(1, &azimuth, &elevation);
+    // }
 
-        // Compensate phase rotation from IQ samples
-        float phase_rotation = -179.117203;
-        doa_estimator.compensateRotation(phase_rotation, 0);
-
-        // Estimate covariance matrix
-        doa_estimator.estimateRxx(0);
-
-        doa_estimator.processESPRIT(2444000000, 0);
-
-        doa_estimator.getProcessed(1, &azimuth, &elevation);
-    }
-
+    // MUSIC
+    doa_estimator.load_x(i_samples, q_samples, NUM_ANTENNAS, IQLENGTH, 0);
+    doa_estimator.compensateRotation(-179.117203, 0);
+    doa_estimator.estimateRxx(0);
+    doa_estimator.processMUSIC(360, 90, 0);
+    doa_estimator.getProcessed(2, &azimuth, &elevation);
     auto t2 = high_resolution_clock::now();
-
     duration<double, std::milli> runtime = t2 - t1;
-
     std::cout << "Runtime: " << runtime.count() << "ms" << std::endl;
 
     printf("Processed value: az: %f, el: %f\n", azimuth, elevation);
