@@ -18,24 +18,24 @@
  * @author      Pedro Lemos
  */
 
-void aoa_estimator::initDoAEstimator(float elements_distance, int debug_flag) {
+void aoa_estimator::initDoAEstimator(double elements_distance, int debug_flag) {
 
     /* Distance between antenna array elements */
     this->distance = elements_distance;
 }
 
-float aoa_estimator::calculate_wavelength(float channel_frequency) {
+double aoa_estimator::calculate_wavelength(double channel_frequency) {
     return LIGHT_SPEED / channel_frequency;
 }
 
 // The board gets 7 samples from the incoming signal to calculate carrier and CTE frequency.
 // This allows to correct for phase differences (practical matter)
 // reference_period_length is number of these samples (ideally 7)
-float aoa_estimator::estimate_phase_rotation(float* i_samples, float* q_samples, int reference_period_length) {
-    float sample_phase = 0;
-    float next_sample_phase = 0;
-    float phase_difference = 0;
-    float phase_difference_acc = 0;
+double aoa_estimator::estimate_phase_rotation(double* i_samples, double* q_samples, int reference_period_length) {
+    double sample_phase = 0;
+    double next_sample_phase = 0;
+    double phase_difference = 0;
+    double phase_difference_acc = 0;
     for (int sample = 0; sample < (reference_period_length - 1); sample++) {
         sample_phase = std::atan2(q_samples[sample], i_samples[sample]);
         next_sample_phase = std::atan2(q_samples[sample + 1], i_samples[sample + 1]);
@@ -48,7 +48,7 @@ float aoa_estimator::estimate_phase_rotation(float* i_samples, float* q_samples,
     return phase_difference_acc;
 }
 
-void aoa_estimator::compensateRotation(float phase_rotation, int debug_flag) {
+void aoa_estimator::compensateRotation(double phase_rotation, int debug_flag) {
 
     std::complex<double> phase_rot;
     phase_rot = {0, M_PI * phase_rotation / 180};
@@ -60,11 +60,11 @@ void aoa_estimator::compensateRotation(float phase_rotation, int debug_flag) {
     }
 }
 
-// Transforms floats into a complex
-void aoa_estimator::load_x(float** i_samples, float** q_samples, int num_antennas, int num_samples, int debug_flag) {
+// Transforms doubles into a complex
+void aoa_estimator::load_x(double** i_samples, double** q_samples, int num_antennas, int num_samples, int debug_flag) {
 
     // Auxiliary complex variable
-    std::complex<float> iq_sample(0, 0);
+    std::complex<double> iq_sample(0, 0);
 
     for (int n = 0; n < num_antennas; n++) {
         for (int k = 0; k < num_samples; k++) {
@@ -86,7 +86,7 @@ void aoa_estimator::estimateRxx(int debug_flag) {
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXcd> eigensolver(this->Rxx);
 
     // Find the eigenvectors related to noise
-    float maximum_value = 0;
+    double maximum_value = 0;
     int index = 0;
 
     for (int n = 0; n < this->antenna_num; n++) {
@@ -106,7 +106,7 @@ void aoa_estimator::estimateRxx(int debug_flag) {
     this->Qn_Prd = Qn * Qn.adjoint();
 }
 
-void aoa_estimator::updateSteeringVector(float azimuth, float elevation, int debug_flag) {
+void aoa_estimator::updateSteeringVector(double azimuth, double elevation, int debug_flag) {
 
     this->x_st = 2 * M_PI * this->distance * std::sin(elevation) * std::cos(azimuth);
     this->y_st = 2 * M_PI * this->distance * std::sin(elevation) * std::sin(azimuth);
@@ -115,8 +115,8 @@ void aoa_estimator::updateSteeringVector(float azimuth, float elevation, int deb
     this->phi_y = {0, this->y_st};
 
     for (int n = 0; n < 4; n++) {
-        this->a_x(0, n) = std::exp((std::complex<float>(n, 0)) * this->phi_x);
-        this->a_y(0, n) = std::exp((std::complex<float>(n, 0)) * this->phi_y);
+        this->a_x(0, n) = std::exp((std::complex<double>(n, 0)) * this->phi_x);
+        this->a_y(0, n) = std::exp((std::complex<double>(n, 0)) * this->phi_y);
     }
 
     for (int n = 0; n < 4; n++) {
@@ -126,9 +126,9 @@ void aoa_estimator::updateSteeringVector(float azimuth, float elevation, int deb
     }
 }
 
-float aoa_estimator::MUSICSpectrum(float azimuth, float elevation, int debug_flag) {
+double aoa_estimator::MUSICSpectrum(double azimuth, double elevation, int debug_flag) {
 
-    float product = 0;
+    double product = 0;
 
     // Update the steering vector to be used right after
     updateSteeringVector(azimuth, elevation, 0);
@@ -145,9 +145,9 @@ float aoa_estimator::MUSICSpectrum(float azimuth, float elevation, int debug_fla
 void aoa_estimator::processMUSIC(int azimuth_max, int elevation_max, int debug_flag) {
 
     // Just some auxiliary variables
-    float last_value = 0;
-    float product;
-    float azimuth, elevation;
+    double last_value = 0;
+    double product;
+    double azimuth, elevation;
 
     for (int n_azim = 0; n_azim < azimuth_max; n_azim++) {
         for (int n_elev = 0; n_elev < elevation_max; n_elev++) {
@@ -219,7 +219,7 @@ void aoa_estimator::initSelectionMatrices(int debug_flag) {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
 }
 
-void aoa_estimator::processESPRIT(float channel_frequency, int debug_flag) {
+void aoa_estimator::processESPRIT(double channel_frequency, int debug_flag) {
 
     // Equations 2.35 e 2.36 (Pedro's TCC)
     this->Qs_1x = (this->Js_1x) * (this->Qs);
@@ -230,7 +230,7 @@ void aoa_estimator::processESPRIT(float channel_frequency, int debug_flag) {
     this->phi_X_LS = ((this->Qs_1x.adjoint() * this->Qs_1x).inverse()) * ((this->Qs_1x.adjoint()) * Qs_2x);
     this->phi_Y_LS = ((this->Qs_1y.adjoint() * this->Qs_1y).inverse()) * ((this->Qs_1y.adjoint()) * Qs_2y);
 
-    float A, B, azimuth, elevation, wavelength;
+    double A, B, azimuth, elevation, wavelength;
     A = std::arg(this->phi_Y_LS(0, 0));
     B = std::arg(this->phi_X_LS(0, 0));
     azimuth = std::atan2(B, A);
@@ -248,7 +248,7 @@ void aoa_estimator::processESPRIT(float channel_frequency, int debug_flag) {
     this->el_esprit = 180 * elevation / M_PI;
 }
 
-void aoa_estimator::getProcessed(int algorithm, float* az, float* el) {
+void aoa_estimator::getProcessed(int algorithm, double* az, double* el) {
     if (algorithm == 1) {
         *az = this->az_esprit;
         *el = this->el_esprit;

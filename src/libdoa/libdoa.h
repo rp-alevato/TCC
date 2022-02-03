@@ -28,6 +28,8 @@ class DoaEstimator {
     Eigen::Matrix<Eigen::dcomplex, n_antennas, (n_antennas - 1)> noise_eigenvectors;
     Eigen::Matrix<Eigen::dcomplex, n_antennas, n_antennas> noise_eigenvectors_product;
     Eigen::Matrix<Eigen::dcomplex, n_antennas, 1> steering_vector;
+    Eigen::Matrix<Eigen::dcomplex, n_antennas_axis, 1> steering_vector_x;
+    Eigen::Matrix<Eigen::dcomplex, n_antennas_axis, 1> steering_vector_y;
 
     // ESPRIT only variables
     Eigen::Matrix<Eigen::dcomplex, n_antennas, 1> signal_eigenvector;
@@ -43,7 +45,7 @@ class DoaEstimator {
     double estimate_music_result(DoaAngles in_angles);
     DoaAngles simple_search();
     DoaAngles process_music();
-    DoaAngles process_esprit(double channel_frequency);
+    DoaAngles process_esprit(double channel_frequency = 2444000000.0);
 
   public:
     DoaEstimator(){};
@@ -51,5 +53,5 @@ class DoaEstimator {
     void load_samples(Eigen::Matrix<Eigen::dcomplex, n_antennas, n_samples>& in_samples,
                       Eigen::Matrix<Eigen::dcomplex, n_samples_ref, 1>& samples_reference);
 
-    DoaAngles process_samples(DoaTechnique technique, double channel_frequency);
+    DoaAngles process_samples(DoaTechnique technique, double channel_frequency = 2444000000.0);
 };

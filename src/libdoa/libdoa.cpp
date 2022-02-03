@@ -5,10 +5,10 @@ void DoaEstimator::load_samples(Eigen::Matrix<Eigen::dcomplex, n_antennas, n_sam
 
     // Calculate phase shift due to sampling with samples_ref
     double phase_difference = 0;
-    for (int i = 1; i < samples_reference.size(); i++) {
+    for (int i = 1; i < n_samples_ref; i++) {
         phase_difference += std::arg(samples_reference(i) * std::conj(samples_reference(i - 1)));
     }
-    phase_difference /= (samples_reference.size() - 1);
+    phase_difference /= (n_samples_ref - 1);
 
     // Load samples and compensate for phase difference calculated above
     for (int i = 0; i < in_samples.rows(); i++) {
@@ -19,7 +19,7 @@ void DoaEstimator::load_samples(Eigen::Matrix<Eigen::dcomplex, n_antennas, n_sam
     return;
 }
 
-DoaAngles DoaEstimator::process_samples(DoaTechnique technique, double channel_frequency = 2444000000) {
+DoaAngles DoaEstimator::process_samples(DoaTechnique technique, double channel_frequency) {
     this->autocorrelation_matrix = (this->samples * this->samples.adjoint()) / n_samples;
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXcd> eigensolver(this->autocorrelation_matrix);
     this->noise_eigenvectors = eigensolver.eigenvectors().block(0, 0, n_antennas, (n_antennas - 1));
@@ -59,20 +59,18 @@ DoaAngles DoaEstimator::simple_search() {
 }
 
 double DoaEstimator::estimate_music_result(DoaAngles angles) {
-    Eigen::Matrix<Eigen::dcomplex, n_antennas_axis, 1> steering_vector_x;
-    Eigen::Matrix<Eigen::dcomplex, n_antennas_axis, 1> steering_vector_y;
     Eigen::dcomplex music_result_complex;
-    double constant = 2 * M_PI * this->antenna_gap_size;
+    static double constexpr constant = 2 * M_PI * this->antenna_gap_size;
     double phase_x = constant * std::cos(angles.azimuth) * std::sin(angles.elevation);
     double phase_y = constant * std::sin(angles.azimuth) * std::sin(angles.elevation);
 
-    for (int i = 0; i < steering_vector_x.size(); i++) {
-        steering_vector_x(i) = std::polar<double>(1.0, i * phase_x);
-        steering_vector_y(i) = std::polar<double>(1.0, i * phase_y);
+    for (int i = 0; i < n_antennas_axis; i++) {
+        this->steering_vector_x(i) = std::polar<double>(1.0, i * phase_x);
+        this->steering_vector_y(i) = std::polar<double>(1.0, i * phase_y);
     }
-    for (int i = 0; i < steering_vector_x.size(); i++) {
-        this->steering_vector.block(steering_vector_x.size() * i, 0, steering_vector_x.size(), 1)
-            = steering_vector_x * steering_vector_y(i);
+    for (int i = 0; i < n_antennas_axis; i++) {
+        this->steering_vector.block(n_antennas_axis * i, 0, n_antennas_axis, 1)
+            = this->steering_vector_x * this->steering_vector_y(i);
     }
 
     music_result_complex = this->steering_vector.adjoint()
@@ -82,7 +80,7 @@ double DoaEstimator::estimate_music_result(DoaAngles angles) {
     return (1 / music_result_complex.real());
 }
 
-DoaAngles DoaEstimator::process_esprit(double channel_frequency = 2444000000) {
-    double wavelength = speed_of_light / channel_frequency;
+DoaAngles DoaEstimator::process_esprit(double channel_frequency) {
+    // double wavelength = speed_of_light / channel_frequency;
     return {std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
 }

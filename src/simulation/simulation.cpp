@@ -9,16 +9,16 @@
 
 #define IQFILE "../../samples/iqsamples.txt"
 
-// Allocate 2D float Buffer for IQ samples
-int allocate2DFloatBuffer(float*** buf, int rows, int cols) {
+// Allocate 2D double Buffer for IQ samples
+int allocate2DFloatBuffer(double*** buf, int rows, int cols) {
     // TODO change to new
-    *buf = (float**)malloc(sizeof(float*) * rows);
+    *buf = (double**)malloc(sizeof(double*) * rows);
     if (*buf == NULL) {
         return 0;
     }
 
     for (int i = 0; i < rows; i++) {
-        (*buf)[i] = (float*)malloc(sizeof(float) * cols);
+        (*buf)[i] = (double*)malloc(sizeof(double) * cols);
         if ((*buf)[i] == NULL) {
             return 0;
         }
@@ -35,8 +35,8 @@ int main(int argc, char const* argv[]) {
     using std::chrono::milliseconds;
 
     // Load IQ samples from file
-    float** i_samples;
-    float** q_samples;
+    double** i_samples;
+    double** q_samples;
 
     // Allocate memory for the IQs
     allocate2DFloatBuffer(&i_samples, IQLENGTH, NUM_ANTENNAS);
@@ -51,7 +51,7 @@ int main(int argc, char const* argv[]) {
         return -1;
     }
 
-    /** This section is used to read the samples as strings and the convert to float **/
+    /** This section is used to read the samples as strings and the convert to double **/
     char iqsampleline[MAX_SAMPSIZE];
     // Two auxiliary variables because of strtok function
     char* i_samplech;
@@ -71,7 +71,7 @@ int main(int argc, char const* argv[]) {
         strcpy(i_samplesch, i_samplech);
         strcpy(q_samplesch, q_samplech);
 
-        // Convert these to float values
+        // Convert these to double values
         i_samples[k][n] = atof(i_samplesch);
         q_samples[k][n] = atof(q_samplesch);
 
@@ -86,13 +86,13 @@ int main(int argc, char const* argv[]) {
 
     // Initialize the estimator with specific element distance
     auto doa_estimator = aoa_estimator();
-    float elements_distance = 0.04;
+    double elements_distance = 0.04;
     doa_estimator.initDoAEstimator(elements_distance, 0);
 
     // Initialize selection matrices used in ESPRIT algorithm
     doa_estimator.initSelectionMatrices(0);
 
-    float azimuth, elevation;
+    double azimuth, elevation;
 
     auto t1 = high_resolution_clock::now();
 
@@ -100,7 +100,7 @@ int main(int argc, char const* argv[]) {
     //     // Load iq samples into the estimator
     //     doa_estimator.load_x(i_samples, q_samples, NUM_ANTENNAS, IQLENGTH, 0);
     //     // Compensate phase rotation from IQ samples
-    //     float phase_rotation = -179.117203;
+    //     double phase_rotation = -179.117203;
     //     doa_estimator.compensateRotation(phase_rotation, 0);
     //     // Estimate covariance matrix
     //     doa_estimator.estimateRxx(0);
@@ -118,7 +118,7 @@ int main(int argc, char const* argv[]) {
     duration<double, std::milli> runtime = t2 - t1;
     std::cout << "Runtime: " << runtime.count() << "ms" << std::endl;
 
-    printf("Processed value: az: %f, el: %f\n", azimuth, elevation);
+    // printf("Processed value: az: %f, el: %f\n", azimuth, elevation);
     /* code */
     return 0;
 }
