@@ -59,25 +59,25 @@ class aoa_estimator {
 
   public:
     // Init DoA estimator
-    void initDoAEstimator(double elements_distance, int debug_flag);
+    void initDoAEstimator(double elements_distance);
     // Estimate phase rotation based on CTE reference period IQ data
     double estimate_phase_rotation(double* i_samples, double* q_samples, int reference_period_length);
     // Load antenna array output matrix. Converte de double para complexo.
-    void load_x(double** i_samples, double** q_samples, int num_antennas, int num_samples, int debug_flag);
+    void load_x(double** i_samples, double** q_samples, int num_antennas, int num_samples);
     // Compensate the phase rotation due to switching/CTE frequncy offset
-    void compensateRotation(double phase_rotation, int debug_flag);
+    void compensateRotation(double phase_rotation);
     // Estimate and decomposes covariance matrix
-    void estimateRxx(int debug_flag);
+    void estimateRxx();
     // Update the steering vector
-    void updateSteeringVector(double azimuth, double elevation, int debug_flag);
+    void updateSteeringVector(double azimuth, double elevation, double channel_frequency);
     // MUSIC spectrum function. It computes the MUSIC Spatial Spectrum power in the given direction using the Steering Vecotor and Qn matrix
-    double MUSICSpectrum(double azimuth, double elevation, int debug_flag);
+    double MUSICSpectrum(double azimuth, double elevation, double channel_frequency);
     // Process MUSIC Spectrum
-    void processMUSIC(int azimuth_max, int elevation_max, int debug_flag);
+    void processMUSIC(int azimuth_max, int elevation_max, double channel_frequency);
     // Initialize Selecion Matrices for ESPRIT algorithm
-    void initSelectionMatrices(int debug_flag);
+    void initSelectionMatrices();
     // Process ESPRIT algorithm
-    void processESPRIT(double channel_frequency, int debug_flag);
+    void processESPRIT(double channel_frequency);
     // Get processed values
     void getProcessed(int algorithm, double* x, double* y);
     // Calculate wavelength based on channel central frequency

@@ -18,7 +18,7 @@
  * @author      Pedro Lemos
  */
 
-void aoa_estimator::initDoAEstimator(double elements_distance, int debug_flag) {
+void aoa_estimator::initDoAEstimator(double elements_distance) {
 
     /* Distance between antenna array elements */
     this->distance = elements_distance;
@@ -48,7 +48,7 @@ double aoa_estimator::estimate_phase_rotation(double* i_samples, double* q_sampl
     return phase_difference_acc;
 }
 
-void aoa_estimator::compensateRotation(double phase_rotation, int debug_flag) {
+void aoa_estimator::compensateRotation(double phase_rotation) {
 
     std::complex<double> phase_rot;
     phase_rot = {0, M_PI * phase_rotation / 180};
@@ -61,7 +61,7 @@ void aoa_estimator::compensateRotation(double phase_rotation, int debug_flag) {
 }
 
 // Transforms doubles into a complex
-void aoa_estimator::load_x(double** i_samples, double** q_samples, int num_antennas, int num_samples, int debug_flag) {
+void aoa_estimator::load_x(double** i_samples, double** q_samples, int num_antennas, int num_samples) {
 
     // Auxiliary complex variable
     std::complex<double> iq_sample(0, 0);
@@ -77,7 +77,7 @@ void aoa_estimator::load_x(double** i_samples, double** q_samples, int num_anten
 }
 
 // Corresponds to equation 2.31 from Pedro's TCC. It's the autocorrelation matrix
-void aoa_estimator::estimateRxx(int debug_flag) {
+void aoa_estimator::estimateRxx() {
 
     // Estimate covariance matrix
     this->Rxx = (this->x) * (this->x.adjoint()) / IQLENGTH;
@@ -106,10 +106,10 @@ void aoa_estimator::estimateRxx(int debug_flag) {
     this->Qn_Prd = Qn * Qn.adjoint();
 }
 
-void aoa_estimator::updateSteeringVector(double azimuth, double elevation, int debug_flag) {
+void aoa_estimator::updateSteeringVector(double azimuth, double elevation, double channel_frequency) {
 
-    this->x_st = 2 * M_PI * this->distance * std::sin(elevation) * std::cos(azimuth);
-    this->y_st = 2 * M_PI * this->distance * std::sin(elevation) * std::sin(azimuth);
+    this->x_st = (2 * M_PI * this->distance * std::sin(elevation) * std::cos(azimuth)) / calculate_wavelength(channel_frequency);
+    this->y_st = (2 * M_PI * this->distance * std::sin(elevation) * std::sin(azimuth)) / calculate_wavelength(channel_frequency);
 
     this->phi_x = {0, this->x_st};
     this->phi_y = {0, this->y_st};
@@ -126,12 +126,11 @@ void aoa_estimator::updateSteeringVector(double azimuth, double elevation, int d
     }
 }
 
-double aoa_estimator::MUSICSpectrum(double azimuth, double elevation, int debug_flag) {
-
+double aoa_estimator::MUSICSpectrum(double azimuth, double elevation, double channel_frequency) {
     double product = 0;
 
     // Update the steering vector to be used right after
-    updateSteeringVector(azimuth, elevation, 0);
+    updateSteeringVector(azimuth, elevation, channel_frequency);
     // Compute the MUSIC Spectrum denominator
     this->aux = this->st_vec.adjoint() * this->Qn_Prd * this->st_vec;
 
@@ -142,7 +141,7 @@ double aoa_estimator::MUSICSpectrum(double azimuth, double elevation, int debug_
     return product;
 }
 
-void aoa_estimator::processMUSIC(int azimuth_max, int elevation_max, int debug_flag) {
+void aoa_estimator::processMUSIC(int azimuth_max, int elevation_max, double channel_frequency) {
 
     // Just some auxiliary variables
     double last_value = 0;
@@ -153,7 +152,7 @@ void aoa_estimator::processMUSIC(int azimuth_max, int elevation_max, int debug_f
         for (int n_elev = 0; n_elev < elevation_max; n_elev++) {
             azimuth = n_azim * (this->angle_step);
             elevation = n_elev * (this->angle_step);
-            product = MUSICSpectrum(azimuth, elevation, 0);
+            product = MUSICSpectrum(azimuth, elevation, channel_frequency);
             // Store the last max value and index
             if (product > last_value) {
                 last_value = product;
@@ -164,7 +163,7 @@ void aoa_estimator::processMUSIC(int azimuth_max, int elevation_max, int debug_f
     }
 }
 
-void aoa_estimator::initSelectionMatrices(int debug_flag) {
+void aoa_estimator::initSelectionMatrices() {
 
     this->Js_1y << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -219,7 +218,7 @@ void aoa_estimator::initSelectionMatrices(int debug_flag) {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
 }
 
-void aoa_estimator::processESPRIT(double channel_frequency, int debug_flag) {
+void aoa_estimator::processESPRIT(double channel_frequency) {
 
     // Equations 2.35 e 2.36 (Pedro's TCC)
     this->Qs_1x = (this->Js_1x) * (this->Qs);
@@ -230,19 +229,13 @@ void aoa_estimator::processESPRIT(double channel_frequency, int debug_flag) {
     this->phi_X_LS = ((this->Qs_1x.adjoint() * this->Qs_1x).inverse()) * ((this->Qs_1x.adjoint()) * Qs_2x);
     this->phi_Y_LS = ((this->Qs_1y.adjoint() * this->Qs_1y).inverse()) * ((this->Qs_1y.adjoint()) * Qs_2y);
 
-    double A, B, azimuth, elevation, wavelength;
+    double A, B, azimuth, elevation, wavelength, constant;
     A = std::arg(this->phi_Y_LS(0, 0));
     B = std::arg(this->phi_X_LS(0, 0));
-    azimuth = std::atan2(B, A);
+    azimuth = std::atan2(A, B);
     wavelength = calculate_wavelength(channel_frequency);
-    // elevation = std::asin(A/(2*M_PI*(this->distance/wavelength)*std::sin(azimuth))); // Eq. 1
-
-    // Forçando a barra na cara dura. Quando o argumento A/(2*M_PI*(this->distance/wavelength)*std::sin(azimuth)) é maior que 1 em (Eq. 1)
-    // o resultado é nan, já que a função arco seno não está definida para valores fora do intervalo [-1,1]
-    // Mas, se trocarmos pela função arco seno (std::asin do header <complex>) que aceita numeros complexos, ela está definida para valores maiores
-    // que 1. Ainda não sei justificar, mas pegando a saída desta função e tirando o módulo o resultado faz sentido.
-    std::complex<double> elevation_input(A / (2 * M_PI * (this->distance / wavelength) * std::sin(azimuth)), 0);
-    elevation = std::abs(std::acos(elevation_input));
+    constant = (2 * M_PI * this->distance) / wavelength;
+    elevation = std::asin(A / (constant * std::sin(azimuth)));
 
     this->az_esprit = 180 * azimuth / M_PI;
     this->el_esprit = 180 * elevation / M_PI;

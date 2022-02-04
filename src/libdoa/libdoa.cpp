@@ -1,7 +1,10 @@
 #include "libdoa.h"
 
 void DoaEstimator::load_samples(Eigen::Matrix<Eigen::dcomplex, n_antennas, n_samples>& in_samples,
-                                Eigen::Matrix<Eigen::dcomplex, n_samples_ref, 1>& samples_reference) {
+                                Eigen::Matrix<Eigen::dcomplex, n_samples_ref, 1>& samples_reference,
+                                double channel_frequency) {
+
+    this->channel_frequency = channel_frequency;
 
     // Calculate phase shift due to sampling with samples_ref
     double phase_difference = 0;
@@ -19,16 +22,18 @@ void DoaEstimator::load_samples(Eigen::Matrix<Eigen::dcomplex, n_antennas, n_sam
     return;
 }
 
-DoaAngles DoaEstimator::process_samples(DoaTechnique technique, double channel_frequency) {
+DoaAngles DoaEstimator::process_samples(DoaTechnique technique) {
     this->autocorrelation_matrix = (this->samples * this->samples.adjoint()) / n_samples;
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXcd> eigensolver(this->autocorrelation_matrix);
     this->noise_eigenvectors = eigensolver.eigenvectors().block(0, 0, n_antennas, (n_antennas - 1));
     this->signal_eigenvector = eigensolver.eigenvectors().block(0, (n_antennas - 1), n_antennas, 1);
+    this->phase_constant = (2 * M_PI * this->antenna_gap_size * this->channel_frequency)
+                           / this->speed_of_light;
 
     if (technique == DoaTechnique::music) {
         return this->process_music();
     } else if (technique == DoaTechnique::esprit) {
-        return this->process_esprit(channel_frequency);
+        return this->process_esprit();
     }
 
     return {std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
@@ -42,11 +47,11 @@ DoaAngles DoaEstimator::process_music() {
 DoaAngles DoaEstimator::simple_search() {
     static constexpr double azimuth_max = 2 * M_PI;
     static constexpr double elevation_max = M_PI / 2;
-    static constexpr double step = M_PI / 180;  // 1 degree / step
+    static constexpr double step = M_PI / 2000;  // 1 degree / step
     DoaAngles result_doa_angles = {0, 0};
     double maximum_result = 0;
 
-    for (double azimuth = step; azimuth < azimuth_max; azimuth += step) {
+    for (double azimuth = 0; azimuth < azimuth_max; azimuth += step) {
         for (double elevation = 0; elevation < elevation_max; elevation += step) {
             double result = this->estimate_music_result({azimuth, elevation});
             if (result > maximum_result) {
@@ -60,9 +65,8 @@ DoaAngles DoaEstimator::simple_search() {
 
 double DoaEstimator::estimate_music_result(DoaAngles angles) {
     Eigen::dcomplex music_result_complex;
-    static double constexpr constant = 2 * M_PI * this->antenna_gap_size;
-    double phase_x = constant * std::cos(angles.azimuth) * std::sin(angles.elevation);
-    double phase_y = constant * std::sin(angles.azimuth) * std::sin(angles.elevation);
+    double phase_x = this->phase_constant * std::cos(angles.azimuth) * std::sin(angles.elevation);
+    double phase_y = this->phase_constant * std::sin(angles.azimuth) * std::sin(angles.elevation);
 
     for (int i = 0; i < n_antennas_axis; i++) {
         this->steering_vector_x(i) = std::polar<double>(1.0, i * phase_x);
@@ -80,7 +84,23 @@ double DoaEstimator::estimate_music_result(DoaAngles angles) {
     return (1 / music_result_complex.real());
 }
 
-DoaAngles DoaEstimator::process_esprit(double channel_frequency) {
-    // double wavelength = speed_of_light / channel_frequency;
-    return {std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
+DoaAngles DoaEstimator::process_esprit() {
+    double phase_x, phase_y;
+    DoaAngles doa_angles = {0, 0};
+
+    this->signal_subvector_x_1 = this->signal_eigenvector(this->signal_subvector_x_1_index);
+    this->signal_subvector_x_2 = this->signal_eigenvector(this->signal_subvector_x_2_index);
+    this->signal_subvector_y_1 = this->signal_eigenvector(this->signal_subvector_y_1_index);
+    this->signal_subvector_y_2 = this->signal_eigenvector(this->signal_subvector_y_2_index);
+
+    phase_x = std::arg(((this->signal_subvector_x_1.adjoint() * this->signal_subvector_x_1).inverse()
+                        * (this->signal_subvector_x_1.adjoint() * this->signal_subvector_x_2))(0));
+    phase_y = std::arg(((this->signal_subvector_y_1.adjoint() * this->signal_subvector_y_1).inverse()
+                        * (this->signal_subvector_y_1.adjoint() * this->signal_subvector_y_2))(0));
+
+    doa_angles.azimuth = std::atan2(phase_y, phase_x);
+
+    doa_angles.elevation = std::asin(phase_y / (this->phase_constant * std::sin(doa_angles.azimuth)));
+
+    return doa_angles;
 }

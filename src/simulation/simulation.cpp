@@ -87,38 +87,38 @@ int main(int argc, char const* argv[]) {
     // Initialize the estimator with specific element distance
     auto doa_estimator = aoa_estimator();
     double elements_distance = 0.04;
-    doa_estimator.initDoAEstimator(elements_distance, 0);
+    doa_estimator.initDoAEstimator(elements_distance);
 
     // Initialize selection matrices used in ESPRIT algorithm
-    doa_estimator.initSelectionMatrices(0);
+    doa_estimator.initSelectionMatrices();
 
     double azimuth, elevation;
 
     auto t1 = high_resolution_clock::now();
 
-    // for (int i = 0; i < 10000; i++) {
-    //     // Load iq samples into the estimator
-    //     doa_estimator.load_x(i_samples, q_samples, NUM_ANTENNAS, IQLENGTH, 0);
-    //     // Compensate phase rotation from IQ samples
-    //     double phase_rotation = -179.117203;
-    //     doa_estimator.compensateRotation(phase_rotation, 0);
-    //     // Estimate covariance matrix
-    //     doa_estimator.estimateRxx(0);
-    //     doa_estimator.processESPRIT(2444000000, 0);
-    //     doa_estimator.getProcessed(1, &azimuth, &elevation);
-    // }
+    for (int i = 0; i < 100000; i++) {
+        // Load iq samples into the estimator
+        doa_estimator.load_x(i_samples, q_samples, NUM_ANTENNAS, IQLENGTH);
+        // Compensate phase rotation from IQ samples
+        double phase_rotation = -179.117203;
+        doa_estimator.compensateRotation(phase_rotation);
+        // Estimate covariance matrix
+        doa_estimator.estimateRxx();
+        doa_estimator.processESPRIT(2444000000);
+        doa_estimator.getProcessed(1, &azimuth, &elevation);
+    }
 
-    // MUSIC
-    doa_estimator.load_x(i_samples, q_samples, NUM_ANTENNAS, IQLENGTH, 0);
-    doa_estimator.compensateRotation(-179.117203, 0);
-    doa_estimator.estimateRxx(0);
-    doa_estimator.processMUSIC(360, 90, 0);
-    doa_estimator.getProcessed(2, &azimuth, &elevation);
+    // // MUSIC
+    // doa_estimator.load_x(i_samples, q_samples, NUM_ANTENNAS, IQLENGTH);
+    // doa_estimator.compensateRotation(-179.117203);
+    // doa_estimator.estimateRxx();
+    // doa_estimator.processMUSIC(360, 90, 2444000000);
+    // doa_estimator.getProcessed(2, &azimuth, &elevation);
     auto t2 = high_resolution_clock::now();
     duration<double, std::milli> runtime = t2 - t1;
     std::cout << "Runtime: " << runtime.count() << "ms" << std::endl;
 
-    // printf("Processed value: az: %f, el: %f\n", azimuth, elevation);
+    printf("Processed value: az: %f, el: %f\n", azimuth, elevation);
     /* code */
     return 0;
 }
