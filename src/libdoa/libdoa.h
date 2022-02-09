@@ -11,9 +11,22 @@ struct DoaAngles {
     double elevation;
 };
 
+struct GradientOptimSpecs {
+    double learning_rate;
+    double accuracy;
+    double diff_step;
+};
+
 enum class DoaTechnique {
-    esprit = 0,
+    esprit,
     music
+};
+
+enum class MusicSearchOptim {
+    simple_grid,
+    linear_grid_gradient,
+    coarse_grid_gradient,
+    music_mapping,
 };
 
 class DoaEstimator {
@@ -48,17 +61,22 @@ class DoaEstimator {
     static constexpr std::array<int, n_subvector> signal_subvector_y_1_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
     static constexpr std::array<int, n_subvector> signal_subvector_y_2_index = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
-  public:
+    DoaAngles process_music(MusicSearchOptim search_optmization, double grid_step, GradientOptimSpecs gradient_specs);
     double estimate_music_result(DoaAngles in_angles);
-    DoaAngles simple_search();
-    DoaAngles process_music();
+    DoaAngles music_simple_grid_search(double grid_step);
+    DoaAngles music_linear_grid_gradient_search(double grid_step, GradientOptimSpecs gradient_specs);
+    DoaAngles music_coarse_grid_gradient_search(double grid_step, GradientOptimSpecs gradient_specs);
+    DoaAngles music_result_mapping(double grid_step);
+    DoaAngles music_gradient_search(DoaAngles coarse_angles, GradientOptimSpecs gradient_specs);
     DoaAngles process_esprit();
 
+  public:
     DoaEstimator(){};
-
     void load_samples(Eigen::Matrix<Eigen::dcomplex, n_antennas, n_samples>& in_samples,
                       Eigen::Matrix<Eigen::dcomplex, n_samples_ref, 1>& samples_reference,
                       double channel_frequency = 2444000000.0);
-
-    DoaAngles process_samples(DoaTechnique technique);
+    DoaAngles process_samples(DoaTechnique technique,
+                              MusicSearchOptim search_optmization = MusicSearchOptim::simple_grid,
+                              double grid_step = 2 * M_PI / 1000,
+                              GradientOptimSpecs gradient_specs = {0.1, 1e-5, 1e-8});
 };
