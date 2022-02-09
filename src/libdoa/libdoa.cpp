@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 #include <vector>
 
 void DoaEstimator::load_samples(Eigen::Matrix<Eigen::dcomplex, n_antennas, n_samples>& in_samples,
@@ -32,12 +33,16 @@ DoaAngles DoaEstimator::process_samples(DoaTechnique technique,
                                         MusicSearchOptim search_optmization,
                                         double grid_step,
                                         GradientOptimSpecs gradient_specs) {
+
     this->autocorrelation_matrix = (this->samples * this->samples.adjoint()) / n_samples;
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXcd> eigensolver(this->autocorrelation_matrix);
     this->noise_eigenvectors = eigensolver.eigenvectors().block(0, 0, n_antennas, (n_antennas - 1));
     this->signal_eigenvector = eigensolver.eigenvectors().block(0, (n_antennas - 1), n_antennas, 1);
-    this->phase_constant = (2 * M_PI * this->antenna_gap_size * this->channel_frequency)
-                           / this->speed_of_light;
+    this->phase_constant = (2 * M_PI * this->antenna_gap_size * this->channel_frequency) / this->speed_of_light;
+
+    if (grid_step < 1e-5) {
+        throw std::invalid_argument("Grid Step too small");
+    }
 
     if (technique == DoaTechnique::music) {
         return this->process_music(search_optmization, grid_step, gradient_specs);
@@ -114,13 +119,15 @@ double DoaEstimator::estimate_music_result(DoaAngles angles) {
 }
 
 DoaAngles DoaEstimator::music_simple_grid_search(double grid_step) {
-    static constexpr double azimuth_max = 2 * M_PI;
-    static constexpr double elevation_max = M_PI / 2;
+    int azimuth_max_iterations = (int)(2 * M_PI / grid_step);
+    int elevation_max_iterations = (int)((M_PI / 2) / grid_step);
     DoaAngles result_angles = {0, 0};
     double maximum_result = 0;
 
-    for (double azimuth = 0; azimuth < azimuth_max; azimuth += grid_step) {
-        for (double elevation = 0; elevation < elevation_max; elevation += grid_step) {
+    for (int azimuth_index = 0; azimuth_index < azimuth_max_iterations; azimuth_index++) {
+        double azimuth = azimuth_index * grid_step;
+        for (int elevation_index = 0; elevation_index < elevation_max_iterations; elevation_index++) {
+            double elevation = elevation_index * grid_step;
             double result = this->estimate_music_result({azimuth, elevation});
             if (result > maximum_result) {
                 maximum_result = result;
@@ -132,29 +139,29 @@ DoaAngles DoaEstimator::music_simple_grid_search(double grid_step) {
 }
 
 DoaAngles DoaEstimator::music_linear_grid_gradient_search(double grid_step, GradientOptimSpecs gradient_specs) {
-    double azimuth_max = 2 * M_PI;
-    double elevation_max = M_PI / 2;
+    int azimuth_max_iterations = (int)(2 * M_PI / grid_step);
+    int elevation_max_iterations = (int)((M_PI / 2) / grid_step);
     DoaAngles coarse_angles = {0, 0};
     double maximum_result = 0;
-    double elevation, azimuth;
 
-    elevation = elevation_max / 2;
+    double mid_elevation = (elevation_max_iterations / 2) * grid_step;
 
-    for (azimuth = 0; azimuth < azimuth_max; azimuth += grid_step) {
-        double result = this->estimate_music_result({azimuth, elevation});
+    for (int azimuth_index = 0; azimuth_index < azimuth_max_iterations; azimuth_index++) {
+        double azimuth = azimuth_index * grid_step;
+        double result = this->estimate_music_result({azimuth, mid_elevation});
         if (result > maximum_result) {
             maximum_result = result;
-            coarse_angles = {azimuth, elevation};
+            coarse_angles = {azimuth, mid_elevation};
         }
     }
 
     maximum_result = 0;
-    azimuth = coarse_angles.azimuth;
-    for (elevation = 0; elevation < elevation_max; elevation += grid_step) {
-        double result = this->estimate_music_result({azimuth, elevation});
+    for (int elevation_index = 0; elevation_index < elevation_max_iterations; elevation_index++) {
+        double elevation = elevation_index * grid_step;
+        double result = this->estimate_music_result({coarse_angles.azimuth, elevation});
         if (result > maximum_result) {
             maximum_result = result;
-            coarse_angles = {azimuth, elevation};
+            coarse_angles = {coarse_angles.azimuth, elevation};
         }
     }
 
@@ -162,13 +169,18 @@ DoaAngles DoaEstimator::music_linear_grid_gradient_search(double grid_step, Grad
 }
 
 DoaAngles DoaEstimator::music_coarse_grid_gradient_search(double grid_step, GradientOptimSpecs gradient_specs) {
-    static constexpr double azimuth_max = 2 * M_PI;
-    static constexpr double elevation_max = M_PI / 2;
+    int azimuth_max_iterations = (int)(2 * M_PI / grid_step);
+    int elevation_max_iterations = (int)((M_PI / 2) / grid_step);
     DoaAngles coarse_angles = {0, 0};
     double maximum_result = 0;
 
-    for (double azimuth = 0; azimuth < azimuth_max; azimuth += grid_step) {
-        for (double elevation = 0; elevation < elevation_max; elevation += grid_step) {
+    int counter = 0;
+
+    for (int azimuth_index = 0; azimuth_index < azimuth_max_iterations; azimuth_index++) {
+        double azimuth = azimuth_index * grid_step;
+        for (int elevation_index = 0; elevation_index < elevation_max_iterations; elevation_index++) {
+            counter++;
+            double elevation = elevation_index * grid_step;
             double result = this->estimate_music_result({azimuth, elevation});
             if (result > maximum_result) {
                 maximum_result = result;
@@ -215,8 +227,8 @@ DoaAngles DoaEstimator::music_gradient_search(DoaAngles coarse_angles, GradientO
 }
 
 DoaAngles DoaEstimator::music_result_mapping(double grid_step) {
-    static constexpr double azimuth_max = 2 * M_PI;
-    static constexpr double elevation_max = M_PI / 2;
+    int azimuth_max_iterations = (int)(2 * M_PI / grid_step);
+    int elevation_max_iterations = (int)((M_PI / 2) / grid_step);
     DoaAngles result_angles = {0, 0};
     double maximum_result = 0;
 
@@ -226,13 +238,15 @@ DoaAngles DoaEstimator::music_result_mapping(double grid_step) {
     std::vector<std::vector<double>> csv_values;
     int row_index = 0;
 
-    for (double elevation = 0; elevation < elevation_max; elevation += grid_step) {
-        csv_cols_names.push_back(elevation);
+    for (int elevation_index = 0; elevation_index < elevation_max_iterations; elevation_index++) {
+        csv_cols_names.push_back(elevation_index * grid_step);
     }
-    for (double azimuth = 0; azimuth < azimuth_max; azimuth += grid_step) {
+    for (int azimuth_index = 0; azimuth_index < azimuth_max_iterations; azimuth_index++) {
+        double azimuth = azimuth_index * grid_step;
         csv_rows_names.push_back(azimuth);
         csv_values.push_back({});
-        for (double elevation = 0; elevation < elevation_max; elevation += grid_step) {
+        for (int elevation_index = 0; elevation_index < elevation_max_iterations; elevation_index++) {
+            double elevation = elevation_index * grid_step;
             double result = this->estimate_music_result({azimuth, elevation});
             if (result > maximum_result) {
                 maximum_result = result;

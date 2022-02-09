@@ -1,5 +1,6 @@
 #include "libdoa.h"
 
+#include <Eigen/Dense>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -58,6 +59,6 @@ int main() {
         std::polar<double>(1, -170.882797 * deg_pi), std::polar<double>(1, 10.0 * deg_pi);
 
     runtime_tests(samples, samples_reference, 2444000000.0, "ESPRIT", DoaTechnique::esprit);
-    runtime_tests(samples, samples_reference, 2444000000.0, "MUSIC Linear Gradient", DoaTechnique::music, MusicSearchOptim::linear_grid_gradient, 2 * M_PI / 10);
-    runtime_tests(samples, samples_reference, 2444000000.0, "MUSIC Linear Gradient", DoaTechnique::music, MusicSearchOptim::coarse_grid_gradient, 2 * M_PI / 10);
+    runtime_tests(samples, samples_reference, 2444000000.0, "MUSIC Coarse Gradient", DoaTechnique::music, MusicSearchOptim::coarse_grid_gradient, 2 * M_PI / 20);
+    runtime_tests(samples, samples_reference, 2444000000.0, "MUSIC Linear Gradient", DoaTechnique::music, MusicSearchOptim::linear_grid_gradient, 2 * M_PI / 20);
 }

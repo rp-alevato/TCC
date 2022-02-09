@@ -3,3 +3,5 @@
 build
 sim
 liveapp
+.ipynb_checkpoints
+tests
