@@ -83,7 +83,7 @@ typedef struct IQsamples {
  * Public variables
  **************************************************************************************************/
 
-extern iqSamples_t iqSamplesBuffered, iqSamplesActive;
+extern iqSamples_t iqSamplesBuffer;
 
 /***************************************************************************************************
  * Function Declarations

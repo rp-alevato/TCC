@@ -120,6 +120,17 @@ THREAD_RETURN_T bgMain(void* args) {
  * Static Function Definitions
  **************************************************************************************************/
 
+uint8_t reference_mac[6] = {0X9C, 0x41, 0xA5, 0x81, 0x8E, 0x58};
+bool is_mac_equal(uint8_t* mac_address, uint8_t* reference_mac) {
+    bool is_equal = true;
+    for (int n = 0; n < 6; n++) {
+        if (mac_address[n] != reference_mac[n]) {
+            is_equal = false;
+        }
+    }
+    return is_equal;
+}
+
 static void bgWaitNewEvent(struct gecko_cmd_packet** evt) {
     // Make sure we do not read events while command responses are read
     ENTER_MUTEX(&bgBufferCriticalSection);
@@ -172,52 +183,56 @@ static void bgProcessEvent(struct gecko_cmd_packet* evt) {
 
         // This event is generated when IQ samples are ready
         case gecko_evt_cte_receiver_silabs_iq_report_id: {
-            IQCount++;
-            // printf("IQ count: %d\n",IQCount);
 
-            uint32_t slen = evt->data.evt_cte_receiver_silabs_iq_report.samples.len;
+            if (is_mac_equal(evt->data.evt_cte_receiver_silabs_iq_report.address.addr, reference_mac)) {
 
-            // Make sure we do not write the IQ sample buffer while the AoX thread is reading it
-            ENTER_MUTEX(&iqSamplesCriticalSection);
+                // printf("IQ count: %d\n", IQCount);
+                // IQCount++;
 
-            // Write auxiliary info into the IQ sample buffer
-            iqSamplesBuffered.connection = 0;
-            iqSamplesBuffered.channel = evt->data.evt_cte_receiver_silabs_iq_report.channel;
-            iqSamplesBuffered.rssi = evt->data.evt_cte_receiver_silabs_iq_report.rssi;
+                uint32_t slen = evt->data.evt_cte_receiver_silabs_iq_report.samples.len;
 
-            if (evt->data.evt_cte_receiver_silabs_iq_report.samples.len > 0) {
-                uint32_t index;
-                index = 0;
-                // Write reference IQ samples into the IQ sample buffer (sampled on one antenna)
-                for (uint32_t sample = 0; sample < ref_period_samples; ++sample) {
-                    iqSamplesBuffered.ref_i_samples[0][sample] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
-                    if (index == slen)
-                        break;
-                    iqSamplesBuffered.ref_q_samples[0][sample] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
-                    if (index == slen)
-                        break;
-                }
+                // Make sure we do not write the IQ sample buffer while the AoX thread is reading it
+                ENTER_MUTEX(&iqSamplesCriticalSection);
 
-                index = ref_period_samples * 2;
-                // Write antenna IQ samples into the IQ sample buffer (sampled on all antennas)
-                for (uint32_t snapshot = 0; snapshot < numSnapshots; ++snapshot) {
-                    for (uint32_t antenna = 0; antenna < numArrayElements; ++antenna) {
-                        iqSamplesBuffered.i_samples[snapshot][antenna] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
+                // Write auxiliary info into the IQ sample buffer
+                iqSamplesBuffer.connection = 0;
+                iqSamplesBuffer.channel = evt->data.evt_cte_receiver_silabs_iq_report.channel;
+                iqSamplesBuffer.rssi = evt->data.evt_cte_receiver_silabs_iq_report.rssi;
+
+                if (evt->data.evt_cte_receiver_silabs_iq_report.samples.len > 0) {
+                    uint32_t index;
+                    index = 0;
+                    // Write reference IQ samples into the IQ sample buffer (sampled on one antenna)
+                    for (uint32_t sample = 0; sample < ref_period_samples; ++sample) {
+                        iqSamplesBuffer.ref_i_samples[0][sample] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
                         if (index == slen)
                             break;
-                        iqSamplesBuffered.q_samples[snapshot][antenna] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
+                        iqSamplesBuffer.ref_q_samples[0][sample] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
                         if (index == slen)
                             break;
                     }
-                    if (index == slen)
-                        break;
-                }
-            }
 
-            // Notify AoX thread about the new samples
-            CONDITION_MET(&newSamplesAvailable);
-            // Now the AoX thread can read the IQ sample buffer
-            EXIT_MUTEX(&iqSamplesCriticalSection);
+                    index = ref_period_samples * 2;
+                    // Write antenna IQ samples into the IQ sample buffer (sampled on all antennas)
+                    for (uint32_t snapshot = 0; snapshot < numSnapshots; ++snapshot) {
+                        for (uint32_t antenna = 0; antenna < numArrayElements; ++antenna) {
+                            iqSamplesBuffer.i_samples[snapshot][antenna] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
+                            if (index == slen)
+                                break;
+                            iqSamplesBuffer.q_samples[snapshot][antenna] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
+                            if (index == slen)
+                                break;
+                        }
+                        if (index == slen)
+                            break;
+                    }
+                }
+
+                // Notify AoX thread about the new samples
+                CONDITION_MET(&newSamplesAvailable);
+                // Now the AoX thread can read the IQ sample buffer
+                EXIT_MUTEX(&iqSamplesCriticalSection);
+            }
 
         } break;
     }

@@ -93,9 +93,10 @@ INCLUDEPATHS += \
 -I./inc \
 -I./inc/rtl \
 -I./inc/bgapi \
--I../libdoa
+-I../libdoa \
+-I../../lib/eigen
 
-override CFLAGS += -fpermissive -std=c++17 -lutil -Wall
+override CFLAGS += -fpermissive -std=c++17 -lutil -Wall -std=c++17 -march=native
 
 # -MMD : Don't generate dependencies on system header files.
 # -MP  : Add phony targets, useful when a h-file is removed from a project.
@@ -201,7 +202,7 @@ src/gecko_bglib.cpp \
 src/main.cpp \
 src/bg.cpp \
 src/aox.cpp \
-../libdoa/doa.cpp
+../libdoa/libdoa.cpp
 
 # this file should be the last added
 C_SRC += src/uart_posix.cpp

@@ -13,13 +13,14 @@ OBJECTS:=$(patsubst $(DIR_SOURCE)/%,$(DIR_BUILD)/%, $(SOURCES:.cpp=.o))
 
 # Dependencies
 DEPS_LIBDOA:=$(filter $(DIR_BUILD)/libdoa/%, $(OBJECTS))
-DEPS_SIM:=$(filter $(DIR_BUILD)/simulation/%, $(OBJECTS)) $(DEPS_LIBDOA)
+DEPS_MISC:=$(filter $(DIR_BUILD)/misc/%, $(OBJECTS))
+DEPS_SIM:=$(filter $(DIR_BUILD)/simulation/%, $(OBJECTS)) $(DEPS_LIBDOA) $(DEPS_MISC)
 DEPS_LIVEAPP:=$(filter $(DIR_BUILD)/live_app/%, $(OBJECTS)) $(DEPS_LIBDOA)
 DEPS_TESTS:=$(filter $(DIR_BUILD)/cpp_tests/%, $(OBJECTS)) $(DEPS_LIBDOA)
 
 # Compiler and its flags
 CC=g++
-CXXFLAGS:=-W -Wall -Wno-format -pedantic -g -Ofast -I $(DIR_EIGEN) -I $(DIR_SOURCE)/libdoa -MMD -march=native -std=c++17
+CXXFLAGS:=-W -Wall -Wno-format -pedantic -g -I $(DIR_EIGEN) -I $(DIR_SOURCE) -MMD -march=native -std=c++17 -Ofast
 
 # Dependencies
 DEPS:=$(OBJECTS:.o=.d)
@@ -49,6 +50,5 @@ $(DIR_BUILD)/%.o: $(DIR_SOURCE)/%.cpp
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	-$(RM) $(OBJECTS)
-	-$(RM) $(DEPENDS)
+	rm -rf build/*
 	-$(RM) sim liveapp

@@ -13,6 +13,11 @@
  **************************************************************************************************/
 
 // Standard library headers
+#include <Eigen/Dense>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <limits>
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -24,7 +29,7 @@
 // BGAPI libraries
 #include "aox.h"
 #include "bg_types.h"
-#include "doa.h"
+#include "libdoa.h"
 
 extern "C" {
 #include "sl_rtl_clib_api.h"
@@ -34,8 +39,8 @@ extern "C" {
  * Public Variable Declarations
  **************************************************************************************************/
 
-// IQ sample buffers
-iqSamples_t iqSamplesBuffered, iqSamplesActive;
+iqSamples_t iqSamples, iqSamplesBuffer;
+SamplesData samples_data;
 
 MUTEX_T iqSamplesCriticalSection;
 MUTEX_T bgBufferCriticalSection;
@@ -63,13 +68,10 @@ static sl_rtl_util_libitem util_libitem;
  * Static Function Declarations
  **************************************************************************************************/
 
-static void aoxWaitNewSamples(iqSamples_t* samples);
+static void aoxWaitNewSamples();
 static enum sl_rtl_error_code aoxProcessSamples(iqSamples_t* samples, float* azimuth, float* elevation, uint32_t* qaResult);
 static float calcFrequencyFromChannel(uint8_t channel);
 static uint32_t allocate2DFloatBuffer(float*** buf, int rows, int cols);
-
-static void init_doa_estimator(aoa_estimator& doa_estimator, float elements_distance);
-static void doaProcessSamples(aoa_estimator& doa_estimator, iqSamples_t* samples);
 
 /***************************************************************************************************
  * Public Function Definitions
@@ -100,14 +102,14 @@ void aoxInit(void* args) {
         sl_rtl_util_set_parameter(&util_libitem, SL_RTL_UTIL_PARAMETER_AMOUNT_OF_FILTERING, 0.6f);
 
         // // Allocate buffers for IQ samples
-        allocate2DFloatBuffer(&(iqSamplesBuffered.i_samples), numSnapshots, numArrayElements);
-        allocate2DFloatBuffer(&(iqSamplesBuffered.q_samples), numSnapshots, numArrayElements);
-        allocate2DFloatBuffer(&(iqSamplesActive.i_samples), numSnapshots, numArrayElements);
-        allocate2DFloatBuffer(&(iqSamplesActive.q_samples), numSnapshots, numArrayElements);
-        allocate2DFloatBuffer(&(iqSamplesBuffered.ref_i_samples), 1, ref_period_samples);
-        allocate2DFloatBuffer(&(iqSamplesBuffered.ref_q_samples), 1, ref_period_samples);
-        allocate2DFloatBuffer(&(iqSamplesActive.ref_i_samples), 1, ref_period_samples);
-        allocate2DFloatBuffer(&(iqSamplesActive.ref_q_samples), 1, ref_period_samples);
+        allocate2DFloatBuffer(&(iqSamples.i_samples), numSnapshots, numArrayElements);
+        allocate2DFloatBuffer(&(iqSamples.q_samples), numSnapshots, numArrayElements);
+        allocate2DFloatBuffer(&(iqSamples.ref_i_samples), 1, ref_period_samples);
+        allocate2DFloatBuffer(&(iqSamples.ref_q_samples), 1, ref_period_samples);
+        allocate2DFloatBuffer(&(iqSamplesBuffer.i_samples), numSnapshots, numArrayElements);
+        allocate2DFloatBuffer(&(iqSamplesBuffer.q_samples), numSnapshots, numArrayElements);
+        allocate2DFloatBuffer(&(iqSamplesBuffer.ref_i_samples), 1, ref_period_samples);
+        allocate2DFloatBuffer(&(iqSamplesBuffer.ref_q_samples), 1, ref_period_samples);
 
         aox_initialized = 1;
 
@@ -117,11 +119,9 @@ void aoxInit(void* args) {
 }
 
 THREAD_RETURN_T aoxMain(void* args) {
-    float azimuth;
-    float elevation;
-    int32_t SampleCount = 0;
+    double azimuth;
+    double elevation;
     uint32_t qualityResult;
-    char* iqSampleQaString;
 
     // If not initialized, initialize
     if (!aox_initialized) {
@@ -129,36 +129,23 @@ THREAD_RETURN_T aoxMain(void* args) {
     }
 
     // Define and initialize custom DoA estimator
-    auto doa_estimator = aoa_estimator();
-    float elements_distance = 0.04;  // Adjacent antenna array elements distance in meters
-    init_doa_estimator(doa_estimator, elements_distance);
+    DoaEstimator estimator;
+    DoaAngles angles;
 
     while (eAppCtrl != eAOX_SHUTDOWN) {
         // Wait for new IQ samples
-        aoxWaitNewSamples(&iqSamplesActive);
-        SampleCount++;
+        aoxWaitNewSamples();
 
-        // Process new IQ Samples using the custom DoA estimator
-        doaProcessSamples(doa_estimator, &iqSamplesActive);
+        // Transform IQ samples to a Eigen matrix
 
-        // Process new IQ samples and calculate Angle of Arrival (azimuth, elevation)
-        enum sl_rtl_error_code ret = aoxProcessSamples(&iqSamplesActive, &azimuth, &elevation, &qualityResult);
-
-        // sl_rtl_aox_process will return SL_RTL_ERROR_ESTIMATION_IN_PROGRESS until it has received enough packets for angle estimation
-        if (ret == SL_RTL_ERROR_SUCCESS) {
-
-            float distance;
-
-            // Calculate distance from RSSI, and calculate a rough position estimation
-            sl_rtl_util_rssi2distance(TAG_TX_POWER, iqSamplesActive.rssi / 1.0, &distance);
-            sl_rtl_util_filter(&util_libitem, distance, &distance);
-
-            // Print out results
-            // printf("azimuth: %6.1f  \televation: %6.1f  \trssi: %6.0f \tch: %2d \tSample Count: %5d \n",
-            //       azimuth, elevation, iqSamplesActive.rssi/1.0, iqSamplesActive.channel, SampleCount);
-
-            fflush(stdout);
-        }
+        // for (int i = 0; i < ref_period_samples; ++i) {
+        //     samples_reference(i) = Eigen::dcomplex(iqSamples.ref_i_samples[0][i], iqSamples.ref_q_samples[0][i]);
+        // }
+        // for (int i = 0; i < numArrayElements; ++i) {
+        //     for (int j = 0; j < numSnapshots; ++j) {
+        //         samples(i, j) = Eigen::dcomplex(iqSamples.i_samples[j][i], iqSamples.q_samples[j][i]);
+        //     }
+        // }
     }
 
     THREAD_EXIT;
@@ -168,69 +155,103 @@ THREAD_RETURN_T aoxMain(void* args) {
  * Custom Static Function Definitions
  **************************************************************************************************/
 
-static void init_doa_estimator(aoa_estimator& doa_estimator, float elements_distance) {
-    doa_estimator.initDoAEstimator(elements_distance, 0);
-    doa_estimator.initSelectionMatrices(0);
-};
-
-static void doaProcessSamples(aoa_estimator& doa_estimator, iqSamples_t* samples) {
-
-    // Estimate phase_rotation
-    float phase_rotation;
-    phase_rotation = doa_estimator.estimate_phase_rotation(samples->ref_i_samples[0], samples->ref_q_samples[0], ref_period_samples);
-
-    // Load iq samples into the estimator
-    doa_estimator.load_x(samples->i_samples, samples->q_samples, NUM_ANTENNAS, IQLENGTH, 0);
-
-    // Compensate phase rotation from IQ samples
-    doa_estimator.compensateRotation(phase_rotation, 0);
-
-    // Estimate covariance matrix
-    doa_estimator.estimateRxx(0);
-
-    doa_estimator.processESPRIT(calcFrequencyFromChannel(samples->channel), 0);
-
-    float azimuth_esp, elevation_esp;
-
-    doa_estimator.getProcessed(1, &azimuth_esp, &elevation_esp);
-
-    // Change array angle reference to match Silabs PCB drawing
-    // azimuth_esp = atan2(sin(PI_CTE*(180-azimuth_esp)/180), cos(PI_CTE*(180-azimuth_esp)/180));
-
-    // azimuth_esp *= 180/PI_CTE;
-
-    printf("azimuth: %f, elevation: %f\n", azimuth_esp, elevation_esp);
-};
-
 /***************************************************************************************************
  * Static Function Definitions
  **************************************************************************************************/
 
-static void aoxWaitNewSamples(iqSamples_t* samples) {
+static void aoxWaitNewSamples() {
+    static int n_samples_saved = 0;
+    static constexpr int first_samples_discarded = 10;
+    static constexpr int max_samples_saved = (10000 + first_samples_discarded);
+
     // Make sure IQ sample buffer is not read while BG thread is writing it
     ENTER_MUTEX(&iqSamplesCriticalSection);
     // Wait until new samples are available (signalled by BG thread)
     CONDITION_WAIT(&newSamplesAvailable, &iqSamplesCriticalSection);
 
-    // Copy auxiliary info from buffer into working copy
-    samples->rssi = iqSamplesBuffered.rssi;
-    samples->channel = iqSamplesBuffered.channel;
-    samples->connection = iqSamplesBuffered.connection;
+    iqSamples.channel = iqSamplesBuffer.channel;
+    iqSamples.rssi = iqSamplesBuffer.rssi;
+
+    // Open file to append IQs
+
+    samples_data.channel_frequency = calcFrequencyFromChannel(iqSamplesBuffer.channel);
 
     // Copy reference IQ samples from buffer into working copy
-    for (uint32_t sample = 0; sample < ref_period_samples; ++sample) {
-        samples->ref_q_samples[0][sample] = iqSamplesBuffered.ref_q_samples[0][sample];
-        samples->ref_i_samples[0][sample] = iqSamplesBuffered.ref_i_samples[0][sample];
+    for (int i = 0; i < ref_period_samples; ++i) {
+        iqSamples.ref_i_samples[0][i] = iqSamplesBuffer.ref_i_samples[0][i];
+        iqSamples.ref_q_samples[0][i] = iqSamplesBuffer.ref_q_samples[0][i];
+        samples_data.samples_reference(i) = Eigen::dcomplex(iqSamples.ref_i_samples[0][i], iqSamples.ref_q_samples[0][i]);
     }
 
     // Copy IQ samples from buffer into working copy
-    for (uint32_t snapshot = 0; snapshot < numSnapshots; ++snapshot) {
-        for (uint32_t antenna = 0; antenna < numArrayElements; ++antenna) {
-            samples->q_samples[snapshot][antenna] = iqSamplesBuffered.q_samples[snapshot][antenna];
-            samples->i_samples[snapshot][antenna] = iqSamplesBuffered.i_samples[snapshot][antenna];
+    for (int i = 0; i < numArrayElements; ++i) {
+        for (int j = 0; j < numSnapshots; ++j) {
+            iqSamples.i_samples[j][i] = iqSamplesBuffer.i_samples[j][i];
+            iqSamples.q_samples[j][i] = iqSamplesBuffer.q_samples[j][i];
+            samples_data.samples(i, j) = Eigen::dcomplex(iqSamples.i_samples[j][i], iqSamples.q_samples[j][i]);
         }
     }
+
+    // // Process new IQ Samples using the custom DoA estimator
+    // static DoaEstimator estimator;
+    // DoaAngles angles;
+    // estimator.load_samples(samples_data);
+    // angles = estimator.process_samples(DoaTechnique::music, MusicSearchOptim::linear_grid_gradient, M_PI / 10);
+    // printf("Azimuth: %6.1f  \tElevation: %6.1f  \trssi: %6.0f \tch: %2d\n",
+    //        (angles.azimuth * 180 / M_PI), (angles.elevation * 180 / M_PI), iqSamples.rssi / 1.0, iqSamples.channel);
+
+    // Process new IQ samples and calculate Angle of Arrival(azimuth, elevation)
+    float phase_rotation, azimuth_float, elevation_float;
+    uint32_t qualityResult;
+    enum sl_rtl_error_code ret = aoxProcessSamples(&iqSamples, &azimuth_float, &elevation_float, &qualityResult);
+    // sl_rtl_aox_process will return SL_RTL_ERROR_ESTIMATION_IN_PROGRESS until it has received enough packets for angle estimation
+    if (ret == SL_RTL_ERROR_SUCCESS) {
+        float distance;
+        sl_rtl_aox_calculate_iq_sample_phase_rotation(&libitem, 2.0f, iqSamples.ref_i_samples[0], iqSamples.ref_q_samples[0], ref_period_samples, &phase_rotation);
+        // Calculate distance from RSSI, and calculate a rough position estimation
+        sl_rtl_util_rssi2distance(TAG_TX_POWER, iqSamples.rssi / 1.0, &distance);
+        sl_rtl_util_filter(&util_libitem, distance, &distance);
+    }
+
+    if (qualityResult == 0 && n_samples_saved < max_samples_saved) {
+        // Print out Silabs results
+        printf("azimuth: %6.1f  \televation: %6.1f  \trssi: %6.0f \tch: %2d\n",
+               azimuth_float, elevation_float, iqSamples.rssi / 1.0, iqSamples.channel);
+        // Save samples data
+        n_samples_saved++;
+        if (n_samples_saved > first_samples_discarded) {
+            std::ofstream iq_file;
+            iq_file.open("iq_samples.txt", std::ios_base::app);
+
+            iq_file << "channel frequency: " << samples_data.channel_frequency << "\n";
+            iq_file << "rssi: " << iqSamples.rssi << "\n";
+            iq_file << "phase rotation: " << phase_rotation << "\n";
+            iq_file << "azimuth, elevation: (" << azimuth_float << ", " << elevation_float << ")\n";
+
+            iq_file << "reference samples:\n";
+            for (int i = 0; i < ref_period_samples; ++i) {
+                iq_file << "(" << iqSamples.ref_i_samples[0][i] << "," << iqSamples.ref_q_samples[0][i] << ")\n";
+            }
+
+            iq_file << "samples:\n";
+            for (int i = 0; i < numArrayElements; ++i) {
+                for (int j = 0; j < numSnapshots; ++j) {
+                    iq_file << "(" << iqSamples.i_samples[j][i] << "," << iqSamples.q_samples[j][i] << ")";
+                    if (j < (numSnapshots - 1)) {
+                        iq_file << ", ";
+                    } else {
+                        iq_file << "\n";
+                    }
+                }
+            }
+            iq_file << "\n";
+        }
+    }
+
     // Now IQ sample buffer can be written by BG thread again
+    if (n_samples_saved >= max_samples_saved) {
+        std::cout << "Collected " << (max_samples_saved - first_samples_discarded) << " samples. No more samples to collect.\n";
+    }
     EXIT_MUTEX(&iqSamplesCriticalSection);
 }
 
