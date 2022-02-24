@@ -8,7 +8,11 @@ int get_iq_samples_reference(SamplesData& samples_data, std::ifstream& iq_file);
 int get_iq_samples_main(SamplesData& samples_data, std::ifstream& iq_file);
 int string_to_complex(Eigen::dcomplex& complex, const std::string& complex_string);
 
-void read_files::iq_samples(std::vector<SamplesData>& samples_data_list, const std::string& file_name) {
+// ****************************************************************************
+// *******************************  IQ SAMPLES  *******************************
+// ****************************************************************************
+
+void read_files::get_iq_samples(std::vector<SamplesData>& samples_data_list, const std::string& file_name) {
     std::ifstream iq_file;
     SamplesData current_data;
 
@@ -130,6 +134,36 @@ int get_iq_samples_main(SamplesData& samples_data, std::ifstream& iq_file) {
 
     return 0;
 }
+
+// ****************************************************************************
+// *****************************  MUSIC RESULTS  ******************************
+// ****************************************************************************
+
+void read_files::get_music_result_angles(std::vector<DoaAngles>& music_results, const std::string& file_name) {
+    std::ifstream music_results_file;
+    std::string line;
+    Eigen::dcomplex azimuth_elevation;
+    DoaAngles current_angle;
+
+    music_results_file.open(file_name);
+    if (!music_results_file.is_open()) {
+        throw std::runtime_error("Error reading file");
+    }
+
+    while (std::getline(music_results_file, line)) {
+        if (string_to_complex(azimuth_elevation, line) < 0) {
+            return;
+        }
+        current_angle = {azimuth_elevation.real(), azimuth_elevation.imag()};
+        music_results.push_back(current_angle);
+    }
+
+    return;
+}
+
+// ****************************************************************************
+// *****************************  MISCELLANEOUS  ******************************
+// ****************************************************************************
 
 int string_to_complex(Eigen::dcomplex& complex, const std::string& complex_string) {
     std::string::size_type comma_position;

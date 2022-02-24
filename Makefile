@@ -14,34 +14,40 @@ OBJECTS:=$(patsubst $(DIR_SOURCE)/%,$(DIR_BUILD)/%, $(SOURCES:.cpp=.o))
 # Dependencies
 DEPS_LIBDOA:=$(filter $(DIR_BUILD)/libdoa/%, $(OBJECTS))
 DEPS_MISC:=$(filter $(DIR_BUILD)/misc/%, $(OBJECTS))
-DEPS_SIM:=$(filter $(DIR_BUILD)/simulation/%, $(OBJECTS)) $(DEPS_LIBDOA) $(DEPS_MISC)
-DEPS_LIVEAPP:=$(filter $(DIR_BUILD)/live_app/%, $(OBJECTS)) $(DEPS_LIBDOA)
-DEPS_TESTS:=$(filter $(DIR_BUILD)/cpp_tests/%, $(OBJECTS)) $(DEPS_LIBDOA)
+DEPS_SAVE_SPECTRUM:=$(DIR_BUILD)/research/save_spectrum.o $(DEPS_LIBDOA) $(DEPS_MISC)
+DEPS_SAVE_MUSIC_RESULTS_ANGLES:=$(DIR_BUILD)/research/save_music_result_angles.o $(DEPS_LIBDOA) $(DEPS_MISC)
+DEPS_HP_ANALYSIS:=$(DIR_BUILD)/research/hp_analysis.o $(DEPS_LIBDOA) $(DEPS_MISC)
+DEPS_CPP_TESTS:=$(DIR_BUILD)/cpp_tests/tests.o $(DEPS_LIBDOA) $(DEPS_MISC)
+DEPS_TEMP:=$(DIR_BUILD)/research/temp_tests.o $(DEPS_LIBDOA) $(DEPS_MISC)
 
 # Compiler and its flags
-CC=g++
-CXXFLAGS:=-W -Wall -Wno-format -pedantic -g -I $(DIR_EIGEN) -I $(DIR_SOURCE) -MMD -march=native -std=c++17 -Ofast
+CC=g++-11
+CXXFLAGS:=-W -Wall -Wno-format -pedantic -g -I $(DIR_EIGEN) -I $(DIR_SOURCE) -MMD -march=native -std=c++17 -Ofast -fopenmp
 
 # Dependencies
 DEPS:=$(OBJECTS:.o=.d)
 -include $(DEPS)
 
-all: sim
+all: save_spectrum save_music_result_angles hp_analysis temp
 
-run: sim
-	@echo "Running executable sim:\n"
-	@./sim
-
-sim: $(DEPS_SIM)
-	$(CC) $^ -o $@
+save_spectrum: $(DEPS_SAVE_SPECTRUM)
+	$(CC) $(CXXFLAGS) $^ -o $@
 	@echo "Done!\n"
 
-tests: $(DEPS_TESTS)
-	$(CC) $^ -o $@
+save_music_result_angles: $(DEPS_SAVE_MUSIC_RESULTS_ANGLES)
+	$(CC) $(CXXFLAGS) $^ -o $@
 	@echo "Done!\n"
 
-liveapp:
-	$(CC) $^ -o $@
+hp_analysis: $(DEPS_HP_ANALYSIS)
+	$(CC) $(CXXFLAGS) $^ -o $@
+	@echo "Done!\n"
+
+cpp_tests: $(DEPS_CPP_TESTS)
+	$(CC) $(CXXFLAGS) $^ -o $@
+	@echo "Done!\n"
+
+temp: $(DEPS_TEMP)
+	$(CC) $(CXXFLAGS) $^ -o $@
 	@echo "Done!\n"
 
 $(DIR_BUILD)/%.o: $(DIR_SOURCE)/%.cpp
@@ -51,4 +57,4 @@ $(DIR_BUILD)/%.o: $(DIR_SOURCE)/%.cpp
 
 clean:
 	rm -rf build/*
-	-$(RM) sim liveapp
+	-$(RM) save_spectrum save_music_result_angles hp_analysis temp cpp_tests
