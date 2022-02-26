@@ -9,7 +9,6 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
-#include <thread>
 #include <vector>
 
 // Equation for best runtime coarse_step based on finer_step (desired precision):
@@ -68,15 +67,11 @@ int main() {
         momentums.push_back(i);
     }
 
-    std::thread finer(complete_finer_grid_analysis, coarse_steps);
+    complete_finer_grid_analysis(coarse_steps);
 
-    std::thread grad_simple(complete_gradient_simple_analysis, coarse_steps, learning_rates);
+    complete_gradient_simple_analysis(coarse_steps, learning_rates);
 
-    std::thread grad_mm(complete_gradient_momentum_analysis, coarse_steps, learning_rates, momentums);
-
-    finer.join();
-    grad_simple.join();
-    grad_mm.join();
+    complete_gradient_momentum_analysis(coarse_steps, learning_rates, momentums);
 
     return 0;
 }
@@ -93,11 +88,11 @@ void complete_finer_grid_analysis(const std::vector<double>& coarse_steps) {
                       training_samples_walk, training_results_walk,
                       training_samples_both, training_results_both);
 
-    std::cout << "\nFiner grid analysis: close.txt:\n\n";
+    std::cout << "Finer grid analysis: close.txt:\n";
     finer_grid_analysis("finer_grid_close.csv", coarse_steps, training_samples_close, training_results_close);
-    std::cout << "\nFiner grid analysis: walk.txt:\n\n";
+    std::cout << "Finer grid analysis: walk.txt:\n";
     finer_grid_analysis("finer_grid_walk.csv", coarse_steps, training_samples_walk, training_results_walk);
-    std::cout << "\nFiner grid analysis: both:\n\n";
+    std::cout << "Finer grid analysis: both:\n";
     finer_grid_analysis("finer_grid_both.csv", coarse_steps, training_samples_both, training_results_both);
 
     return;
@@ -120,11 +115,11 @@ void finer_grid_analysis(const std::string output_filename, const std::vector<do
     // Add columns to csv file
     make_csv_columns(output_csv, "finer_grid");
 
-    std::cout << "F: Total number of steps: " << coarse_steps.size() << "\n";
+    std::cout << "Total number of steps: " << coarse_steps.size() << "\n";
 
     for (std::size_t coarse_index = 0; coarse_index < coarse_steps.size(); coarse_index++) {
         double coarse_step = coarse_steps[coarse_index];
-        std::cout << "F: Coarse step: " << coarse_step << "\n";
+        std::cout << "Coarse step: " << coarse_step << "\n";
         save_csv_info_for_every_sample(output_csv, "finer_grid", samples_data,
                                        correct_results_vector, MusicOptimization::finer_grid_search,
                                        coarse_step, 0, 0);
@@ -148,15 +143,15 @@ void complete_gradient_simple_analysis(const std::vector<double>& coarse_steps,
                       training_samples_walk, training_results_walk,
                       training_samples_both, training_results_both);
 
-    std::cout << "\nGradient simple analysis: close.txt:\n\n";
+    std::cout << "Gradient simple analysis: close.txt:\n";
     gradient_simple_analysis("gradient_simple_close.csv", coarse_steps, learning_rates,
                              training_samples_close, training_results_close);
 
-    std::cout << "\nGradient simple analysis: walk.txt:\n\n";
+    std::cout << "Gradient simple analysis: walk.txt:\n";
     gradient_simple_analysis("gradient_simple_walk.csv", coarse_steps, learning_rates,
                              training_samples_walk, training_results_walk);
 
-    std::cout << "\nGradient simple analysis: both:\n\n";
+    std::cout << "Gradient simple analysis: both:\n";
     gradient_simple_analysis("gradient_simple_both.csv", coarse_steps, learning_rates,
                              training_samples_both, training_results_both);
 
@@ -181,15 +176,15 @@ void gradient_simple_analysis(const std::string output_filename, const std::vect
     // Add columns to csv file
     make_csv_columns(output_csv, "gradient_simple");
 
-    std::cout << "GS: Total number of coarse_steps: " << coarse_steps.size() << "\n";
-    std::cout << "GS: Total number of learning_rates: " << learning_rates.size() << "\n";
+    std::cout << "Total number of coarse_steps: " << coarse_steps.size() << "\n";
+    std::cout << "Total number of learning_rates: " << learning_rates.size() << "\n";
 
     for (std::size_t coarse_index = 0; coarse_index < coarse_steps.size(); coarse_index++) {
         double coarse_step = coarse_steps[coarse_index];
+        std::cout << "Coarse step: " << coarse_step << "\n";
         for (std::size_t lr_index = 0; lr_index < learning_rates.size(); lr_index++) {
             double learning_rate = learning_rates[lr_index];
-            std::cout << "GS: Coarse step: " << coarse_step
-                      << " | Learning rate: " << learning_rate << "\n";
+            std::cout << "Learning rate: " << learning_rate << "\n";
             save_csv_info_for_every_sample(output_csv, "gradient_simple", samples_data,
                                            correct_results_vector, MusicOptimization::gradient_simple,
                                            coarse_step, learning_rate, 0);
@@ -215,15 +210,15 @@ void complete_gradient_momentum_analysis(const std::vector<double>& coarse_steps
                       training_samples_walk, training_results_walk,
                       training_samples_both, training_results_both);
 
-    std::cout << "\nGradient momentum analysis: close.txt:\n\n";
+    std::cout << "Gradient momentum analysis: close.txt:\n";
     gradient_momentum_analysis("gradient_momentum_close.csv", coarse_steps, learning_rates,
                                momentums, training_samples_close, training_results_close);
 
-    std::cout << "\nGradient momentum analysis: walk.txt:\n\n";
+    std::cout << "Gradient momentum analysis: walk.txt:\n";
     gradient_momentum_analysis("gradient_momentum_walk.csv", coarse_steps, learning_rates,
                                momentums, training_samples_walk, training_results_walk);
 
-    std::cout << "\nGradient momentum analysis: both:\n\n";
+    std::cout << "Gradient momentum analysis: both:\n";
     gradient_momentum_analysis("gradient_momentum_both.csv", coarse_steps, learning_rates,
                                momentums, training_samples_both, training_results_both);
 
@@ -249,19 +244,19 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
     // Add columns to csv file
     make_csv_columns(output_csv, "gradient_momentum");
 
-    std::cout << "GM: Total number of coarse_steps: " << coarse_steps.size() << "\n";
-    std::cout << "GM: Total number of learning_rates: " << learning_rates.size() << "\n";
-    std::cout << "GM: Total number of momentums: " << momentums.size() << "\n";
+    std::cout << "Total number of coarse_steps: " << coarse_steps.size() << "\n";
+    std::cout << "Total number of learning_rates: " << learning_rates.size() << "\n";
+    std::cout << "Total number of momentums: " << momentums.size() << "\n";
 
     for (std::size_t coarse_index = 0; coarse_index < coarse_steps.size(); coarse_index++) {
         double coarse_step = coarse_steps[coarse_index];
+        std::cout << "Coarse step: " << coarse_step << "\n";
         for (std::size_t lr_index = 0; lr_index < learning_rates.size(); lr_index++) {
             double learning_rate = learning_rates[lr_index];
+            std::cout << "Learning rate: " << learning_rate << "\n";
             for (std::size_t m_index = 0; m_index < momentums.size(); m_index++) {
                 double momentum = momentums[m_index];
-                std::cout << "GM: Coarse step: " << coarse_step
-                          << " | Learning rate: " << learning_rate
-                          << " | Momentum: " << learning_rate << "\n";
+                std::cout << "Momentum: " << learning_rate << "\n";
                 save_csv_info_for_every_sample(output_csv, "gradient_momentum", samples_data,
                                                correct_results_vector, MusicOptimization::gradient_momentum,
                                                coarse_step, learning_rate, momentum);
