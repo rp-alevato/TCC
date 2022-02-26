@@ -306,55 +306,89 @@ void make_csv_columns(std::ofstream& output_csv, const std::string analysis_meth
     } else if (analysis_method == "gradient_momentum") {
         output_csv << "learning_rate,momentum,";
     }
-    output_csv << "number_accurates,total_iterations,"
-               << "accuracy,runtime,mae,mse,rmse\n";
+    output_csv << "runtime,accuracy,"
+               << "mae_len,rmse_len,mae_len_99p,rmse_len_99p,mae_len_1p,rmse_len_1p,"
+               << "mae_az,rmse_az,mae_az_99p,rmse_az_99p,mae_az_1p,rmse_az_1p,"
+               << "mae_el,rmse_el,mae_el_99p,rmse_el_99p,mae_el_1p,rmse_el_1p\n";
 }
 
 void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string analysis_method,
                                     const std::vector<SamplesData>& samples_data,
-                                    const std::vector<DoaAngles>& correct_results_vector,
+                                    const std::vector<DoaAngles>& correct_results,
                                     const MusicOptimization optimization, const double coarse_step,
                                     double learning_rate, double momentum) {
     auto double_precision = std::numeric_limits<long double>::digits10;
-    std::vector<double> error_lengths;
-    DoaEstimator doa_estimator;
+    std::vector<double> errors_len, errors_az, errors_el;
+    std::vector<DoaAngles> results;
+    DoaEstimator estimator;
     GradientSpecs gradient_specs = {1e-5, 1e-6, learning_rate, momentum};
     double coarse_step_pi = utility::angle_to_pi(coarse_step);
-    double n_accurates = 0;
-    int iterations = 0;
 
+    // Estimate angles
     auto t1 = std::chrono::high_resolution_clock::now();
-
     for (std::size_t sample_index = 0; sample_index < samples_data.size(); sample_index++) {
-        DoaAngles result_angles, correct_angles;
-        correct_angles = correct_results_vector[sample_index];
-        result_angles = doa_estimator.process_samples(samples_data[sample_index], DoaTechnique::music,
-                                                      MusicSearch::coarse_grid, M_PI / 1800,
-                                                      optimization, coarse_step_pi, gradient_specs);
-        if (utility::is_equal_angles(correct_angles, result_angles, 4 * finer_step)) {
-            n_accurates++;
-        } else {
-            correct_angles = utility::angles_to_degree(correct_angles);
-            result_angles = utility::angles_to_degree(result_angles);
-            double error = std::hypot((correct_angles.azimuth - result_angles.azimuth),
-                                      (correct_angles.elevation - result_angles.elevation));
-            error_lengths.push_back(error);
-        }
-        iterations++;
+        results.push_back(estimator.process_samples(samples_data[sample_index], DoaTechnique::music,
+                                                    MusicSearch::coarse_grid, finer_step,
+                                                    optimization, coarse_step_pi, gradient_specs));
     }
-
     auto t2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float, std::milli> runtime = t2 - t1;
+    std::chrono::duration<float, std::milli> delta_t = t2 - t1;
 
-    double mae = 0, mse = 0, rmse = 0;
-    if (error_lengths.size() > 0) {
-        mae = stats::mae_double(error_lengths);
-        mse = stats::mse_double(error_lengths);
-        rmse = stats::rmse_double(mse);
+    // Calculate errors for length, azimuth and elevation
+    int n_accurates = 0;
+    for (std::size_t i = 0; i < results.size(); i++) {
+        double result_az = utility::angle_to_degree(results[i].azimuth);
+        double result_el = utility::angle_to_degree(results[i].elevation);
+        double correct_result_az = utility::angle_to_degree(correct_results[i].azimuth);
+        double correct_result_el = utility::angle_to_degree(correct_results[i].elevation);
+        double error_az = correct_result_az - result_az;
+        double error_el = correct_result_el - result_el;
+        double error_len = std::hypot(error_az, error_el);
+        errors_az.push_back(error_az);
+        errors_el.push_back(error_el);
+        errors_len.push_back(error_len);
+        if (error_len < 0.2) {
+            n_accurates++;
+        }
     }
+
+    // Get first 99% of errors and last 1% of errors
+    std::sort(errors_len.begin(), errors_len.end());
+    std::sort(errors_az.begin(), errors_az.end());
+    std::sort(errors_el.begin(), errors_el.end());
+    auto end_len_99p = errors_len.begin() + (0.99 * errors_len.size());
+    std::vector<double> errors_len_99p(errors_len.begin(), end_len_99p);
+    std::vector<double> errors_len_1p(end_len_99p, errors_len.end());
+    auto end_az_99p = errors_az.begin() + (0.99 * errors_az.size());
+    std::vector<double> errors_az_99p(errors_az.begin(), end_az_99p);
+    std::vector<double> errors_az_1p(end_az_99p, errors_az.end());
+    auto end_el_99p = errors_el.begin() + (0.99 * errors_el.size());
+    std::vector<double> errors_el_99p(errors_el.begin(), end_el_99p);
+    std::vector<double> errors_el_1p(end_el_99p, errors_el.end());
+
+    // Calculate statistics
+    double runtime = delta_t.count();
+    double accuracy = ((double)n_accurates / results.size());
+    double mae_len = stats::mae_double(errors_len);
+    double rmse_len = stats::rmse_double(stats::mse_double(errors_len));
+    double mae_len_99p = stats::mae_double(errors_len_99p);
+    double rmse_len_99p = stats::rmse_double(stats::mse_double(errors_len_99p));
+    double mae_len_1p = stats::mae_double(errors_len_1p);
+    double rmse_len_1p = stats::rmse_double(stats::mse_double(errors_len_1p));
+    double mae_az = stats::mae_double(errors_az);
+    double rmse_az = stats::rmse_double(stats::mse_double(errors_az));
+    double mae_az_99p = stats::mae_double(errors_az_99p);
+    double rmse_az_99p = stats::rmse_double(stats::mse_double(errors_az_99p));
+    double mae_az_1p = stats::mae_double(errors_az_1p);
+    double rmse_az_1p = stats::rmse_double(stats::mse_double(errors_az_1p));
+    double mae_el = stats::mae_double(errors_el);
+    double rmse_el = stats::rmse_double(stats::mse_double(errors_el));
+    double mae_el_99p = stats::mae_double(errors_el_99p);
+    double rmse_el_99p = stats::rmse_double(stats::mse_double(errors_el_99p));
+    double mae_el_1p = stats::mae_double(errors_el_1p);
+    double rmse_el_1p = stats::rmse_double(stats::mse_double(errors_el_1p));
 
     // Save values to CSV.
-    // Columns: index, number_accurates, total_iterations, accuracy, runtime, mae, mse, rmse
     output_csv << coarse_step << ",";
     if (analysis_method == "gradient_simple") {
         output_csv << learning_rate << ",";
@@ -362,13 +396,34 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
         output_csv << learning_rate << ",";
         output_csv << momentum << ",";
     }
-    output_csv << n_accurates << ",";
-    output_csv << iterations << ",";
-    output_csv << std::setprecision(double_precision) << (n_accurates / iterations) << ",";
-    output_csv << runtime.count() << ",";
-    output_csv << std::setprecision(double_precision) << mae << ",";
-    output_csv << std::setprecision(double_precision) << mse << ",";
-    output_csv << std::setprecision(double_precision) << rmse << "\n";
+
+    // Columns: runtime, accuracy,
+    //          mae_len, rmse_len, mae_len_99p, rmse_len_99p, mae_len_1p, rmse_len_1p,
+    //          mae_az, rmse_az, mae_az_99p, rmse_az_99p, mae_az_1p, rmse_az_1p,
+    //          mae_el, rmse_el, mae_el_99p, rmse_el_99p, mae_el_1p, rmse_el_1p,
+    output_csv << std::setprecision(double_precision) << runtime << ",";
+    output_csv << std::setprecision(double_precision) << accuracy << ",";
+
+    output_csv << std::setprecision(double_precision) << mae_len << ",";
+    output_csv << std::setprecision(double_precision) << rmse_len << ",";
+    output_csv << std::setprecision(double_precision) << mae_len_99p << ",";
+    output_csv << std::setprecision(double_precision) << rmse_len_99p << ",";
+    output_csv << std::setprecision(double_precision) << mae_len_1p << ",";
+    output_csv << std::setprecision(double_precision) << rmse_len_1p << ",";
+
+    output_csv << std::setprecision(double_precision) << mae_az << ",";
+    output_csv << std::setprecision(double_precision) << rmse_az << ",";
+    output_csv << std::setprecision(double_precision) << mae_az_99p << ",";
+    output_csv << std::setprecision(double_precision) << rmse_az_99p << ",";
+    output_csv << std::setprecision(double_precision) << mae_az_1p << ",";
+    output_csv << std::setprecision(double_precision) << rmse_az_1p << ",";
+
+    output_csv << std::setprecision(double_precision) << mae_el << ",";
+    output_csv << std::setprecision(double_precision) << rmse_el << ",";
+    output_csv << std::setprecision(double_precision) << mae_el_99p << ",";
+    output_csv << std::setprecision(double_precision) << rmse_el_99p << ",";
+    output_csv << std::setprecision(double_precision) << mae_el_1p << ",";
+    output_csv << std::setprecision(double_precision) << rmse_el_1p << "\n";
 
     return;
 }
