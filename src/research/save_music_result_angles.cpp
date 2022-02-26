@@ -2,6 +2,7 @@
 #include "misc/progress_bar.h"
 #include "misc/read_data_files.h"
 
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <string>
@@ -10,13 +11,13 @@
 void save_music_result_angles(std::string iq_file_name, std::string music_result_angles_file_name);
 
 int main() {
-    // save_music_result_angles("close.txt", "close.txt");
-    // save_music_result_angles("office_walk.txt", "office_walk.txt");
-    // save_music_result_angles("fixed_1.txt", "fixed_1.txt");
-    // save_music_result_angles("fixed_2.txt", "fixed_2.txt");
-    // save_music_result_angles("fixed_3.txt", "fixed_3.txt");
-    // save_music_result_angles("fixed_4.txt", "fixed_4.txt");
-    // save_music_result_angles("fixed_5.txt", "fixed_5.txt");
+    save_music_result_angles("close.txt", "close_finer.txt");
+    save_music_result_angles("office_walk.txt", "office_walk_finer.txt");
+    save_music_result_angles("fixed_1.txt", "fixed_1_finer.txt");
+    save_music_result_angles("fixed_2.txt", "fixed_2_finer.txt");
+    save_music_result_angles("fixed_3.txt", "fixed_3_finer.txt");
+    save_music_result_angles("fixed_4.txt", "fixed_4_finer.txt");
+    save_music_result_angles("fixed_5.txt", "fixed_5_finer.txt");
     return 0;
 }
 
@@ -27,17 +28,26 @@ void save_music_result_angles(std::string iq_file_name, std::string music_result
     ProgressBar progress_bar(samples_data_vector.size());
     DoaEstimator estimator;
     DoaAngles angles;
-    std::ofstream music_result_angles_file;
-    music_result_angles_file.open("data/music_result_angles/" + music_result_angles_file_name);
+    std::ofstream output_file;
     auto double_precision = std::numeric_limits<long double>::digits10;
+    const std::string output_name = "data/music_result_angles/" + music_result_angles_file_name;
+
+    if (std::filesystem::exists(output_name)) {
+        throw std::runtime_error("File " + output_name + " exists.\n\t   Please remove file if you want to overwrite it.\n");
+    }
+    output_file.open(output_name);
+    if (!output_file.is_open()) {
+        throw std::runtime_error("Error opening file " + output_name);
+    }
+
     std::cout << "Saving music result angles for " << music_result_angles_file_name << "\n";
     for (auto samples_data : samples_data_vector) {
         progress_bar.update();
-        angles = estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::simple_grid, M_PI / 3600);
-        music_result_angles_file << std::setprecision(double_precision) << "("
-                                 << angles.azimuth << "," << angles.elevation << ")\n";
+        angles = estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::simple_grid, M_PI / 1800);
+        output_file << std::setprecision(double_precision) << "("
+                    << angles.azimuth << "," << angles.elevation << ")\n";
     }
-    music_result_angles_file.close();
+    output_file.close();
 
     std::cout << "\nDone!\n\n";
 

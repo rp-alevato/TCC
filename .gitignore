@@ -5,3 +5,4 @@ sim
 liveapp
 .ipynb_checkpoints
 tests
+*.exe

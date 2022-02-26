@@ -32,32 +32,32 @@ double utility::normalize_angle_2pi(double angle) {
     return angle;
 }
 
-bool utility::is_equal_double(double x, double y, double epsilon) {
+bool utility::is_equal_double(const double x, const double y, const double epsilon) {
     return (std::abs(x - y) < epsilon);
 }
 
-bool utility::is_equal_angles(DoaAngles x, DoaAngles y, double epsilon) {
+bool utility::is_equal_angles(const DoaAngles x, const DoaAngles y, const double epsilon) {
     bool azimuth_equal = utility::is_equal_double(x.azimuth, y.azimuth, epsilon);
     bool elevation_equal = utility::is_equal_double(x.elevation, y.elevation, epsilon);
     return (azimuth_equal && elevation_equal);
 }
 
-double utility::transfom_angle_to_degree(double angle) {
+double utility::angle_to_degree(const double angle) {
     return angle * 180 / M_PI;
 }
 
-double utility::transfom_angle_to_pi(double angle) {
+double utility::angle_to_pi(const double angle) {
     return angle * M_PI / 180;
 }
 
-DoaAngles utility::transfom_angles_to_degree(DoaAngles angles) {
-    angles.azimuth = transfom_angle_to_degree(angles.azimuth);
-    angles.elevation = transfom_angle_to_degree(angles.elevation);
+DoaAngles utility::angles_to_degree(DoaAngles angles) {
+    angles.azimuth = angle_to_degree(angles.azimuth);
+    angles.elevation = angle_to_degree(angles.elevation);
     return angles;
 }
 
-DoaAngles utility::transfom_angles_to_pi(DoaAngles angles) {
-    angles.azimuth = transfom_angle_to_pi(angles.azimuth);
-    angles.elevation = transfom_angle_to_pi(angles.elevation);
+DoaAngles utility::angles_to_pi(DoaAngles angles) {
+    angles.azimuth = angle_to_pi(angles.azimuth);
+    angles.elevation = angle_to_pi(angles.elevation);
     return angles;
 }

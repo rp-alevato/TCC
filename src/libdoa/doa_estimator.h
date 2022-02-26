@@ -61,8 +61,8 @@ enum class MusicOptimization {
 
 class DoaEstimator {
   public:
-    DoaEstimator(){
-        // Eigen::setNbThreads(4);
+    DoaEstimator() {
+        Eigen::setNbThreads(4);
     };
     // Main methods
     double estimate_music_result(const DoaAngles in_angles);  // Public for research purposes
@@ -116,11 +116,10 @@ class DoaEstimator {
     DoaAngles music_simple_grid_search(const double grid_step);
     DoaAngles music_coarse_grid_search(const double finer_step, const double coarse_step, const MusicOptimization optimization, const GradientSpecs gradient_specs);
     // MusicOptimization algorithms
-    DoaAngles music_finer_grid_search(const DoaAngles coarse_angles, const double finer_step, const double coarse_step);
+    DoaAngles music_finer_grid_search(const DoaAngles coarse_angles, const double finer_step, double coarse_step);
     DoaAngles music_gradient(const DoaAngles coarse_angles, const GradientSpecs gradient_specs);
     DoaAngles music_gradient_momentum(const DoaAngles coarse_angles, const GradientSpecs gradient_specs);
     // Utility
-    double normalize_angle_pi(double angle);
     double normalize_angle_2pi(double angle);
 };
 

@@ -5,12 +5,12 @@
 #include "misc/utility.h"
 
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <filesystem>
 
 // Equation for best runtime coarse_step based on finer_step (desired precision):
 // min(((n_coarse^2)/4) + (2*n_finer/n_coarse)^2
@@ -21,7 +21,7 @@ const std::string close_filename = "close.txt";
 const std::string walk_filename = "office_walk.txt";
 const std::string output_dir = "data/experimental_results/hyperparameters/";
 
-static constexpr std::size_t training_stride = 1000;
+static constexpr std::size_t training_stride = 5;
 static constexpr double finer_step = M_PI / 1800;
 
 // Finer grid functions
@@ -34,6 +34,14 @@ void complete_gradient_simple_analysis(const std::vector<double>& coarse_steps,
 void gradient_simple_analysis(const std::string output_filename, const std::vector<double>& coarse_steps,
                               const std::vector<double>& learning_rates, const std::vector<SamplesData>& samples_data,
                               const std::vector<DoaAngles>& correct_results_vector);
+//  Gradient momentum functions
+void complete_gradient_momentum_analysis(const std::vector<double>& coarse_steps,
+                                         const std::vector<double>& learning_rates,
+                                         const std::vector<double>& momentums);
+void gradient_momentum_analysis(const std::string output_filename, const std::vector<double>& coarse_steps,
+                                const std::vector<double>& learning_rates, const std::vector<double>& momentums,
+                                const std::vector<SamplesData>& samples_data,
+                                const std::vector<DoaAngles>& correct_results_vector);
 // Utility functions
 void get_training_data(std::vector<SamplesData>& training_samples_close, std::vector<DoaAngles>& training_results_close,
                        std::vector<SamplesData>& training_samples_walk, std::vector<DoaAngles>& training_results_walk,
@@ -46,15 +54,25 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
                                     double learning_rate, double momentum);
 
 int main() {
-    // Create coarse_steps in Degrees
+    // Create hyperparameters vectors
     std::vector<double> coarse_steps;
-    static constexpr double max_step = 10;
-    static constexpr double stride = 1;
-    for (std::size_t i = 1; i <= (max_step / stride); i++) {
-        coarse_steps.push_back(i * stride);
+    for (std::size_t i = 1; i <= 10; i++) {
+        coarse_steps.push_back(i);
+    }
+    std::vector<double> learning_rates;
+    for (double i = 0.1; i <= 0.9; i += 0.1) {
+        learning_rates.push_back(i);
+    }
+    std::vector<double> momentums;
+    for (double i = 0.1; i <= 0.9; i += 0.1) {
+        momentums.push_back(i);
     }
 
     complete_finer_grid_analysis(coarse_steps);
+
+    complete_gradient_simple_analysis(coarse_steps, learning_rates);
+
+    complete_gradient_momentum_analysis(coarse_steps, learning_rates, momentums);
 
     return 0;
 }
@@ -71,13 +89,6 @@ void complete_finer_grid_analysis(const std::vector<double>& coarse_steps) {
                       training_samples_walk, training_results_walk,
                       training_samples_both, training_results_both);
 
-    std::cout << "training_samples_close size: " << training_samples_close.size() << "\n";
-    std::cout << "training_results_close size: " << training_results_close.size() << "\n";
-    std::cout << "training_samples_walk size: " << training_samples_walk.size() << "\n";
-    std::cout << "training_results_walk size: " << training_results_walk.size() << "\n";
-    std::cout << "training_samples_both size: " << training_samples_both.size() << "\n";
-    std::cout << "training_results_both size: " << training_results_both.size() << "\n";
-
     std::cout << "Finer grid analysis: close.txt:\n";
     finer_grid_analysis("finer_grid_close.csv", coarse_steps, training_samples_close, training_results_close);
     std::cout << "Finer grid analysis: walk.txt:\n";
@@ -92,9 +103,15 @@ void finer_grid_analysis(const std::string output_filename, const std::vector<do
                          const std::vector<SamplesData>& samples_data, const std::vector<DoaAngles>& correct_results_vector) {
     std::ofstream output_csv;
     DoaEstimator doa_estimator;
+    const std::string output_name = output_dir + output_filename;
 
-
-    output_csv.open(output_dir + output_filename);
+    if (std::filesystem::exists(output_name)) {
+        throw std::runtime_error("File " + output_name + " exists.\n\t   Please remove file if you want to overwrite it.\n");
+    }
+    output_csv.open(output_name);
+    if (!output_csv.is_open()) {
+        throw std::runtime_error("Error opening file " + output_name);
+    }
 
     // Add columns to csv file
     make_csv_columns(output_csv, "finer_grid");
@@ -147,7 +164,15 @@ void gradient_simple_analysis(const std::string output_filename, const std::vect
                               const std::vector<DoaAngles>& correct_results_vector) {
     std::ofstream output_csv;
     DoaEstimator doa_estimator;
-    output_csv.open(output_dir + output_filename);
+    const std::string output_name = output_dir + output_filename;
+
+    if (std::filesystem::exists(output_name)) {
+        throw std::runtime_error("File " + output_name + " exists.\n\t   Please remove file if you want to overwrite it.\n");
+    }
+    output_csv.open(output_name);
+    if (!output_csv.is_open()) {
+        throw std::runtime_error("Error opening file " + output_name);
+    }
 
     // Add columns to csv file
     make_csv_columns(output_csv, "gradient_simple");
@@ -207,7 +232,15 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
                                 const std::vector<DoaAngles>& correct_results_vector) {
     std::ofstream output_csv;
     DoaEstimator doa_estimator;
-    output_csv.open(output_dir + output_filename);
+    const std::string output_name = output_dir + output_filename;
+
+    if (std::filesystem::exists(output_name)) {
+        throw std::runtime_error("File " + output_name + " exists.\n\t   Please remove file if you want to overwrite it.\n");
+    }
+    output_csv.open(output_name);
+    if (!output_csv.is_open()) {
+        throw std::runtime_error("Error opening file " + output_name);
+    }
 
     // Add columns to csv file
     make_csv_columns(output_csv, "gradient_momentum");
@@ -272,7 +305,7 @@ void make_csv_columns(std::ofstream& output_csv, const std::string analysis_meth
     if (analysis_method == "gradient_simple") {
         output_csv << "learning_rate,";
     } else if (analysis_method == "gradient_momentum") {
-        output_csv << "learning_rate,momentum";
+        output_csv << "learning_rate,momentum,";
     }
     output_csv << "number_accurates,total_iterations,"
                << "accuracy,runtime,mae,mse,rmse\n";
@@ -287,6 +320,7 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
     std::vector<double> error_lengths;
     DoaEstimator doa_estimator;
     GradientSpecs gradient_specs = {1e-5, 1e-6, learning_rate, momentum};
+    double coarse_step_pi = utility::angle_to_pi(coarse_step);
     double n_accurates = 0;
     int iterations = 0;
     ProgressBar progress_bar(samples_data.size());
@@ -297,13 +331,13 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
         DoaAngles result_angles, correct_angles;
         correct_angles = correct_results_vector[sample_index];
         result_angles = doa_estimator.process_samples(samples_data[sample_index], DoaTechnique::music,
-                                                      MusicSearch::coarse_grid, finer_step,
-                                                      optimization, coarse_step, gradient_specs);
-        if (utility::is_equal_angles(correct_angles, result_angles, finer_step)) {
+                                                      MusicSearch::coarse_grid, M_PI / 1800,
+                                                      optimization, coarse_step_pi, gradient_specs);
+        if (utility::is_equal_angles(correct_angles, result_angles, 4 * finer_step)) {
             n_accurates++;
         } else {
-            correct_angles = utility::transfom_angles_to_degree(correct_angles);
-            result_angles = utility::transfom_angles_to_degree(result_angles);
+            correct_angles = utility::angles_to_degree(correct_angles);
+            result_angles = utility::angles_to_degree(result_angles);
             double error = std::hypot((correct_angles.azimuth - result_angles.azimuth),
                                       (correct_angles.elevation - result_angles.elevation));
             error_lengths.push_back(error);
@@ -315,9 +349,15 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> runtime = t2 - t1;
 
+    double mae = 0, mse = 0, rmse = 0;
+    if (error_lengths.size() > 0) {
+        mae = stats::mae_double(error_lengths);
+        mse = stats::mse_double(error_lengths);
+        rmse = stats::rmse_double(mse);
+    }
+
     // Save values to CSV.
     // Columns: index, number_accurates, total_iterations, accuracy, runtime, mae, mse, rmse
-    double mse = stats::mse_double(error_lengths);
     output_csv << coarse_step << ",";
     if (analysis_method == "gradient_simple") {
         output_csv << learning_rate << ",";
@@ -329,9 +369,9 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
     output_csv << iterations << ",";
     output_csv << std::setprecision(double_precision) << (n_accurates / iterations) << ",";
     output_csv << runtime.count() << ",";
-    output_csv << std::setprecision(double_precision) << stats::mae_double(error_lengths) << ",";
+    output_csv << std::setprecision(double_precision) << mae << ",";
     output_csv << std::setprecision(double_precision) << mse << ",";
-    output_csv << std::setprecision(double_precision) << stats::rmse_double(mse) << "\nrm ";
+    output_csv << std::setprecision(double_precision) << rmse << "\n";
 
     std::cout << "\n";
     return;

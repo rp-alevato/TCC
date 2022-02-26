@@ -18,7 +18,7 @@ void read_files::get_iq_samples(std::vector<SamplesData>& samples_data_list, con
 
     iq_file.open(file_name);
     if (!iq_file.is_open()) {
-        throw std::runtime_error("Error reading file");
+        throw std::runtime_error("Error reading file " + file_name);
     }
 
     while (get_iq_samples_data_block(current_data, iq_file) >= 0) {
@@ -147,7 +147,7 @@ void read_files::get_music_result_angles(std::vector<DoaAngles>& music_results, 
 
     music_results_file.open(file_name);
     if (!music_results_file.is_open()) {
-        throw std::runtime_error("Error reading file");
+        throw std::runtime_error("Error reading file " + file_name);
     }
 
     while (std::getline(music_results_file, line)) {

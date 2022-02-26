@@ -8,12 +8,12 @@ double normalize_angle_180(double angle);
 double normalize_angle_360(double angle);
 double normalize_angle_pi(double angle);
 double normalize_angle_2pi(double angle);
-bool is_equal_double(double x, double y, double epsilon = 1e-12);
-bool is_equal_angles(DoaAngles x, DoaAngles y, double epsilon);
-double transfom_angle_to_degree(double angle);
-double transfom_angle_to_pi(double angle);
-DoaAngles transfom_angles_to_degree(DoaAngles angles);
-DoaAngles transfom_angles_to_pi(DoaAngles angles);
+bool is_equal_double(const double x, const double y, const double epsilon = 1e-12);
+bool is_equal_angles(const DoaAngles x, const DoaAngles y, const double epsilon);
+double angle_to_degree(const double angle);
+double angle_to_pi(const double angle);
+DoaAngles angles_to_degree(DoaAngles angles);
+DoaAngles angles_to_pi(DoaAngles angles);
 }  // namespace utility
 
 #endif  // MISC_UTILITY_H
