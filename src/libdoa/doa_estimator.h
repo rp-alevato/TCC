@@ -72,7 +72,7 @@ class DoaEstimator {
                               const double grid_step = 2 * M_PI / 1440,
                               const MusicOptimization optimization = MusicOptimization::gradient_simple,
                               const double coarse_step = 2 * M_PI / 45,
-                              const GradientSpecs gradient_specs = {1e-5, 1e-6, 0.5, 0.3});
+                              const GradientSpecs gradient_specs = {1e-9, 1e-9, 0.03, 0.95});
 
   private:
     static constexpr int speed_of_light = libdoa_const::speed_of_light;
@@ -82,6 +82,7 @@ class DoaEstimator {
     static constexpr int n_antennas = libdoa_const::n_antennas;
     static constexpr int n_subvector = libdoa_const::n_subvector;
     static constexpr double antenna_gap_size = libdoa_const::antenna_gap_size;  // Size in meters
+    static constexpr int max_gradient_iterations = 1000;
     static constexpr std::array<int, n_subvector> signal_subvector_x_1_index = {0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14};
     static constexpr std::array<int, n_subvector> signal_subvector_x_2_index = {1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15};
     static constexpr std::array<int, n_subvector> signal_subvector_y_1_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
@@ -120,6 +121,7 @@ class DoaEstimator {
     DoaAngles music_gradient(const DoaAngles coarse_angles, const GradientSpecs gradient_specs);
     DoaAngles music_gradient_momentum(const DoaAngles coarse_angles, const GradientSpecs gradient_specs);
     // Utility
+    DoaAngles shift_result_angles(DoaAngles result_angles);
     double normalize_angle_2pi(double angle);
 };
 

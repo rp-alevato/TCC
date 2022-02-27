@@ -215,17 +215,7 @@ DoaAngles DoaEstimator::music_finer_grid_search(const DoaAngles coarse_angles,
         }
     }
 
-    result_angles.elevation = this->normalize_angle_2pi(result_angles.elevation);
-    if (result_angles.elevation > M_PI) {
-        result_angles.elevation = (2 * M_PI) - result_angles.elevation;
-        result_angles.azimuth = result_angles.azimuth + M_PI;
-    }
-    if (result_angles.elevation > (M_PI / 2)) {
-        result_angles.elevation = M_PI - result_angles.elevation;
-    }
-    result_angles.azimuth = this->normalize_angle_2pi(result_angles.azimuth);
-
-    return result_angles;
+    return this->shift_result_angles(result_angles);
 }
 
 DoaAngles DoaEstimator::music_gradient(const DoaAngles coarse_angles, const GradientSpecs gradient_specs) {
@@ -253,19 +243,10 @@ DoaAngles DoaEstimator::music_gradient(const DoaAngles coarse_angles, const Grad
 
         result_angles.azimuth += azimuth_step;
         result_angles.elevation += elevation_step;
-    } while ((continue_azimuth || continue_elevation) && iterations < 10000);
+    } while ((continue_azimuth || continue_elevation)
+             && (iterations < max_gradient_iterations));
 
-    result_angles.elevation = this->normalize_angle_2pi(result_angles.elevation);
-    if (result_angles.elevation > M_PI) {
-        result_angles.elevation = (2 * M_PI) - result_angles.elevation;
-        result_angles.azimuth = result_angles.azimuth + M_PI;
-    }
-    if (result_angles.elevation > (M_PI / 2)) {
-        result_angles.elevation = M_PI - result_angles.elevation;
-    }
-    result_angles.azimuth = this->normalize_angle_2pi(result_angles.azimuth);
-
-    return result_angles;
+    return this->shift_result_angles(result_angles);
 }
 
 DoaAngles DoaEstimator::music_gradient_momentum(const DoaAngles coarse_angles, const GradientSpecs gradient_specs) {
@@ -299,11 +280,17 @@ DoaAngles DoaEstimator::music_gradient_momentum(const DoaAngles coarse_angles, c
         prev_step_elevation = elevation_step;
         result_angles.azimuth += azimuth_step;
         result_angles.elevation += elevation_step;
-        // std::cout << result_angles.azimuth << ", " << result_angles.elevation << "\n";
-    } while ((continue_azimuth || continue_elevation) && iterations < 500);
+    } while ((continue_azimuth || continue_elevation)
+             && (iterations < max_gradient_iterations));
 
-    // std::cout << "Iterations: " << iterations << "\n";
+    return this->shift_result_angles(result_angles);
+}
 
+// ****************************************************************************
+// *****************************  UTILITY METHODS *****************************
+// ****************************************************************************
+
+DoaAngles DoaEstimator::shift_result_angles(DoaAngles result_angles) {
     result_angles.elevation = this->normalize_angle_2pi(result_angles.elevation);
     if (result_angles.elevation > M_PI) {
         result_angles.elevation = (2 * M_PI) - result_angles.elevation;
@@ -316,10 +303,6 @@ DoaAngles DoaEstimator::music_gradient_momentum(const DoaAngles coarse_angles, c
 
     return result_angles;
 }
-
-// ****************************************************************************
-// *****************************  UTILITY METHODS *****************************
-// ****************************************************************************
 
 double DoaEstimator::normalize_angle_2pi(double angle) {
     angle = std::fmod(angle, (2 * M_PI));
