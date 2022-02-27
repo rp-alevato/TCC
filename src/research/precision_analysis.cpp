@@ -74,10 +74,12 @@ void precision_analysis(const std::string& filename) {
         sl_results_el.push_back(elevation);
     }
 
-    output_csv << "technique,mean_len,median_len,variance_len,std_dev_len,mean_az,median_az,variance_az,std_dev_az,mean_el,median_el,variance_el,std_dev_el\n";
+    output_csv << "technique,mean_len,median_len,mad_len,std_dev_len,"
+               << "mean_az,median_az,mad_az,std_dev_az,"
+               << "mean_el,median_el,mad_el,std_dev_el\n";
     calc_save_output("music", output_csv, music_results_len, music_results_az, music_results_el);
     calc_save_output("esprit", output_csv, esprit_results_len, esprit_results_az, esprit_results_el);
-    calc_save_output("sl", output_csv, sl_results_len, sl_results_az, sl_results_el);
+    calc_save_output("silabs", output_csv, sl_results_len, sl_results_az, sl_results_el);
 
     return;
 }
@@ -96,26 +98,28 @@ void calc_save_output(const std::string& technique, std::ofstream& output_csv, s
     double median_len = stats::median_sorted_double(results_len);
     double median_az = stats::median_sorted_double(results_az);
     double median_el = stats::median_sorted_double(results_el);
-    double variance_len = stats::variance_double(results_len, mean_len);
-    double variance_az = stats::variance_double(results_az, mean_az);
-    double variance_el = stats::variance_double(results_el, mean_el);
-    double std_dev_len = stats::std_deviation_double(variance_len);
-    double std_dev_az = stats::std_deviation_double(variance_az);
-    double std_dev_el = stats::std_deviation_double(variance_el);
+    double mad_len = stats::mad_double(results_len, mean_len);
+    double mad_az = stats::mad_double(results_az, mean_az);
+    double mad_el = stats::mad_double(results_el, mean_el);
+    double std_dev_len = stats::std_deviation_double(stats::variance_double(results_len, mean_len));
+    double std_dev_az = stats::std_deviation_double(stats::variance_double(results_az, mean_az));
+    double std_dev_el = stats::std_deviation_double(stats::variance_double(results_el, mean_el));
 
-    // Columns: technique, mean_len, median_len, variance_len, std_dev_len, mean_az, median_az, variance_az, std_dev_az, mean_el, median_el, variance_el, std_dev_el
+    // Columns: technique, mean_len, median_len, mad_len, std_dev_len,
+    //                     mean_az, median_az, mad_az, std_dev_az,
+    //                     mean_el, median_el, mad_el, std_dev_el
     output_csv << technique << ",";
     output_csv << std::setprecision(double_precision) << mean_len << ",";
     output_csv << std::setprecision(double_precision) << median_len << ",";
-    output_csv << std::setprecision(double_precision) << variance_len << ",";
+    output_csv << std::setprecision(double_precision) << mad_len << ",";
     output_csv << std::setprecision(double_precision) << std_dev_len << ",";
     output_csv << std::setprecision(double_precision) << mean_az << ",";
     output_csv << std::setprecision(double_precision) << median_az << ",";
-    output_csv << std::setprecision(double_precision) << variance_az << ",";
+    output_csv << std::setprecision(double_precision) << mad_az << ",";
     output_csv << std::setprecision(double_precision) << std_dev_az << ",";
     output_csv << std::setprecision(double_precision) << mean_el << ",";
     output_csv << std::setprecision(double_precision) << median_el << ",";
-    output_csv << std::setprecision(double_precision) << variance_el << ",";
+    output_csv << std::setprecision(double_precision) << mad_el << ",";
     output_csv << std::setprecision(double_precision) << std_dev_el << "\n";
 
     return;

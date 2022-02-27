@@ -317,22 +317,22 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
     double runtime = delta_t.count();
     double accuracy = ((double)n_accurates / results.size());
     double mae_len = stats::mae_double(errors_len);
-    double rmse_len = stats::rmse_double(stats::mse_double(errors_len));
     double mae_len_99p = stats::mae_double(errors_len_99p);
-    double rmse_len_99p = stats::rmse_double(stats::mse_double(errors_len_99p));
     double mae_len_1p = stats::mae_double(errors_len_1p);
-    double rmse_len_1p = stats::rmse_double(stats::mse_double(errors_len_1p));
     double mae_az = stats::mae_double(errors_az);
-    double rmse_az = stats::rmse_double(stats::mse_double(errors_az));
     double mae_az_99p = stats::mae_double(errors_az_99p);
-    double rmse_az_99p = stats::rmse_double(stats::mse_double(errors_az_99p));
     double mae_az_1p = stats::mae_double(errors_az_1p);
-    double rmse_az_1p = stats::rmse_double(stats::mse_double(errors_az_1p));
     double mae_el = stats::mae_double(errors_el);
-    double rmse_el = stats::rmse_double(stats::mse_double(errors_el));
     double mae_el_99p = stats::mae_double(errors_el_99p);
-    double rmse_el_99p = stats::rmse_double(stats::mse_double(errors_el_99p));
     double mae_el_1p = stats::mae_double(errors_el_1p);
+    double rmse_len = stats::rmse_double(stats::mse_double(errors_len));
+    double rmse_len_99p = stats::rmse_double(stats::mse_double(errors_len_99p));
+    double rmse_len_1p = stats::rmse_double(stats::mse_double(errors_len_1p));
+    double rmse_az = stats::rmse_double(stats::mse_double(errors_az));
+    double rmse_az_99p = stats::rmse_double(stats::mse_double(errors_az_99p));
+    double rmse_az_1p = stats::rmse_double(stats::mse_double(errors_az_1p));
+    double rmse_el = stats::rmse_double(stats::mse_double(errors_el));
+    double rmse_el_99p = stats::rmse_double(stats::mse_double(errors_el_99p));
     double rmse_el_1p = stats::rmse_double(stats::mse_double(errors_el_1p));
 
     // Save values to CSV.

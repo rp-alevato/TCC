@@ -20,12 +20,20 @@ double stats::median_sorted_double(const std::vector<double>& in_vector) {
     return (in_vector[(size - 2) / 2] + in_vector[size / 2]) / 2.0;
 }
 
-double stats::variance_double(const std::vector<double>& in_vector, const double mean) {
-    double variance = 0;
+double stats::mad_double(const std::vector<double>& in_vector, const double mean) {
+    double accumulator = 0;
     for (auto v : in_vector) {
-        variance += (v - mean) * (v - mean);
+        accumulator += std::abs(v - mean);
     }
-    return (variance / in_vector.size());
+    return (accumulator / in_vector.size());
+}
+
+double stats::variance_double(const std::vector<double>& in_vector, const double mean) {
+    double accumulator = 0;
+    for (auto v : in_vector) {
+        accumulator += (v - mean) * (v - mean);
+    }
+    return (accumulator / in_vector.size());
 }
 
 double stats::std_deviation_double(const double variance) {
