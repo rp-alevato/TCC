@@ -22,7 +22,7 @@ DEPS_CPP_TESTS:=$(DIR_BUILD)/cpp_tests/tests.o $(DEPS_LIBDOA) $(DEPS_MISC)
 DEPS_TEMP:=$(DIR_BUILD)/research/temp_tests.o $(DEPS_LIBDOA) $(DEPS_MISC)
 
 # Compiler and its flags
-CC=g++-11
+CC=g++-10
 CXXFLAGS:=-W -Wall -Wno-format -pedantic -g -I $(DIR_EIGEN) -I $(DIR_SOURCE) -MMD -march=native -std=c++17 -fopenmp -O2
 
 # Dependencies
