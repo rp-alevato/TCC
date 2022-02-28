@@ -157,11 +157,11 @@ void calc_save_output(const std::string& technique, std::ofstream& output_csv, s
 
     output_csv << std::setprecision(double_precision) << mean_el << ",";
     output_csv << std::setprecision(double_precision) << mad_el << ",";
-    output_csv << std::setprecision(double_precision) << std_dev_el << "\n";
+    output_csv << std::setprecision(double_precision) << std_dev_el << ",";
     output_csv << std::setprecision(double_precision) << mad_el_99p << ",";
     output_csv << std::setprecision(double_precision) << std_dev_el_99p << ",";
     output_csv << std::setprecision(double_precision) << mad_el_1p << ",";
-    output_csv << std::setprecision(double_precision) << std_dev_el_1p << ",";
+    output_csv << std::setprecision(double_precision) << std_dev_el_1p << "\n";
 
     return;
 }
