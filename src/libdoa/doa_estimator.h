@@ -69,9 +69,9 @@ class DoaEstimator {
     DoaAngles process_samples(const SamplesData& in_samples,
                               const DoaTechnique technique,
                               const MusicSearch search_method = MusicSearch::simple_grid,
-                              const double grid_step = 2 * M_PI / 1440,
+                              const double grid_step = 2 * M_PI / 720,
                               const MusicOptimization optimization = MusicOptimization::gradient_simple,
-                              const double coarse_step = 2 * M_PI / 45,
+                              const double coarse_step = 2 * M_PI / 60,
                               const GradientSpecs gradient_specs = {1e-9, 1e-9, 0.03, 0.95});
 
   private:
