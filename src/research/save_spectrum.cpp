@@ -59,7 +59,7 @@ void music_save_spectrum(SamplesData& samples_data, double const grid_step, std:
     }
 
     // Print to file
-    auto double_precision = std::numeric_limits<long double>::digits10 + 1;
+    auto double_precision = std::numeric_limits<double>::digits10 + 1;
     std::ofstream spectrum_csv;
     const std::string spectrum_csv_name = "data/music_spectrum/" + file_name;
     if (std::filesystem::exists(spectrum_csv_name)) {

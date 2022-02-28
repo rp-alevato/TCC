@@ -264,7 +264,7 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
                                     const std::vector<DoaAngles>& correct_results,
                                     const MusicOptimization optimization, const double coarse_step,
                                     const double learning_rate, const double momentum) {
-    auto double_precision = std::numeric_limits<long double>::digits10;
+    auto double_precision = std::numeric_limits<double>::digits10;
     std::vector<double> errors_len, errors_az, errors_el;
     std::vector<DoaAngles> results;
     DoaEstimator estimator;

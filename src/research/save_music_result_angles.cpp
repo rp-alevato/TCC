@@ -29,7 +29,7 @@ void save_music_result_angles(std::string iq_file_name, std::string music_result
     DoaEstimator estimator;
     DoaAngles angles;
     std::ofstream output_file;
-    auto double_precision = std::numeric_limits<long double>::digits10;
+    auto double_precision = std::numeric_limits<double>::digits10;
     const std::string output_name = "data/music_result_angles/" + music_result_angles_file_name;
 
     if (std::filesystem::exists(output_name)) {

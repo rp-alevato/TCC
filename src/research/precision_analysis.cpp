@@ -87,7 +87,7 @@ void precision_analysis(const std::string& filename) {
 void calc_save_output(const std::string& technique, std::ofstream& output_csv, std::vector<double>& results_len,
                       std::vector<double>& results_az, std::vector<double>& results_el) {
 
-    auto double_precision = std::numeric_limits<long double>::digits10;
+    auto double_precision = std::numeric_limits<double>::digits10;
     std::vector<double> errors_len, errors_az, errors_el;
 
     std::sort(results_len.begin(), results_len.end());
