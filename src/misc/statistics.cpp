@@ -31,26 +31,14 @@ double stats::mad_double(const std::vector<double>& in_vector, const double mean
 double stats::variance_double(const std::vector<double>& in_vector, const double mean) {
     double accumulator = 0;
     for (auto v : in_vector) {
-        accumulator += (v - mean) * (v - mean);
+        double error = (v - mean);
+        accumulator += error * error;
     }
     return (accumulator / in_vector.size());
 }
 
 double stats::std_deviation_double(const double variance) {
     return std::sqrt(variance);
-}
-
-double stats::lowest_sorted_double(const std::vector<double>& in_vector) {
-    return in_vector.front();
-}
-
-double stats::highest_sorted_double(const std::vector<double>& in_vector) {
-    return in_vector.back();
-}
-
-double stats::range_double_sorted_double(const std::vector<double>& in_vector) {
-    return (stats::highest_sorted_double(in_vector)
-            - stats::lowest_sorted_double(in_vector));
 }
 
 double stats::mae_double(const std::vector<double>& error_vector) {
@@ -71,4 +59,17 @@ double stats::mse_double(const std::vector<double>& error_vector) {
 
 double stats::rmse_double(const double mse) {
     return std::sqrt(mse);
+}
+
+double stats::lowest_sorted_double(const std::vector<double>& in_vector) {
+    return in_vector.front();
+}
+
+double stats::highest_sorted_double(const std::vector<double>& in_vector) {
+    return in_vector.back();
+}
+
+double stats::range_double_sorted_double(const std::vector<double>& in_vector) {
+    return (stats::highest_sorted_double(in_vector)
+            - stats::lowest_sorted_double(in_vector));
 }

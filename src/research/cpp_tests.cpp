@@ -1,4 +1,4 @@
-#include "doa_estimator.h"
+#include "estimator.h"
 
 #include <chrono>
 #include <cmath>

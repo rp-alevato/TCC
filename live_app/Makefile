@@ -93,8 +93,8 @@ INCLUDEPATHS += \
 -I./inc \
 -I./inc/rtl \
 -I./inc/bgapi \
--I../libdoa \
--I../../lib/eigen
+-I../src \
+-I../lib/eigen
 
 override CFLAGS += -fpermissive -std=c++17 -lutil -Wall -std=c++17 -march=native
 
@@ -202,7 +202,7 @@ src/gecko_bglib.cpp \
 src/main.cpp \
 src/bg.cpp \
 src/aox.cpp \
-../libdoa/libdoa.cpp
+../src/aoa/estimator.cpp
 
 # this file should be the last added
 C_SRC += src/uart_posix.cpp

@@ -6,11 +6,11 @@
 // #define EIGEN_NO_DEBUG
 // #endif
 
-#ifndef LIBDOA_DOA_ESTIMATOR_H
-#define LIBDOA_DOA_ESTIMATOR_H
+#ifndef AOA_ESTIMATOR_H
+#define AOA_ESTIMATOR_H
 
 // Constants
-namespace libdoa_const {
+namespace aoa_const {
 static constexpr int speed_of_light = 299792458;
 static constexpr int n_samples_ref = 7;
 static constexpr int n_samples = 4;
@@ -18,11 +18,11 @@ static constexpr int n_antennas_axis = 4;
 static constexpr int n_antennas = 16;
 static constexpr int n_subvector = 12;
 static constexpr double antenna_gap_size = 0.04;  // Size in meters
-}  // namespace libdoa_const
+}  // namespace aoa_const
 
 struct SamplesData {
-    Eigen::Matrix<Eigen::dcomplex, libdoa_const::n_samples_ref, 1> samples_reference;
-    Eigen::Matrix<Eigen::dcomplex, libdoa_const::n_antennas, libdoa_const::n_samples> samples;
+    Eigen::Matrix<Eigen::dcomplex, aoa_const::n_samples_ref, 1> samples_reference;
+    Eigen::Matrix<Eigen::dcomplex, aoa_const::n_antennas, aoa_const::n_samples> samples;
     double channel_frequency;
     double rssi;
     double sl_phase_rotation;
@@ -31,19 +31,19 @@ struct SamplesData {
 };
 
 // Angles in radians
-struct DoaAngles {
+struct AoaAngles {
     double azimuth;
     double elevation;
 };
 
 struct GradientSpecs {
-    double accuracy;
+    double threshold;
     double diff_step;
     double learning_rate;
     double momentum;
 };
 
-enum class DoaTechnique {
+enum class AoaTechnique {
     esprit,
     music
 };
@@ -56,33 +56,39 @@ enum class MusicSearch {
 enum class MusicOptimization {
     finer_grid_search,
     gradient_simple,
+    gradient_adapt_lr,
     gradient_momentum
 };
 
-class DoaEstimator {
+class AoaEstimator {
   public:
-    DoaEstimator() {
+    // Research purposes
+    bool get_was_max_iterations() {
+        return was_max_iterations;
+    };
+    AoaEstimator() {
         Eigen::setNbThreads(4);
     };
     // Main methods
-    double estimate_music_result(const DoaAngles in_angles);  // Public for research purposes
-    DoaAngles process_samples(const SamplesData& in_samples,
-                              const DoaTechnique technique,
+    double estimate_music_result(const AoaAngles in_angles);  // Public for research purposes
+    AoaAngles process_samples(const SamplesData& in_samples,
+                              const AoaTechnique technique,
                               const MusicSearch search_method = MusicSearch::simple_grid,
                               const double grid_step = 2 * M_PI / 720,
                               const MusicOptimization optimization = MusicOptimization::gradient_simple,
                               const double coarse_step = 2 * M_PI / 60,
-                              const GradientSpecs gradient_specs = {1e-9, 1e-9, 0.03, 0.95});
+                              const GradientSpecs gradient_specs = {1e-5, 1e-8, 0.5, 0.95});
 
   private:
-    static constexpr int speed_of_light = libdoa_const::speed_of_light;
-    static constexpr int n_samples_ref = libdoa_const::n_samples_ref;
-    static constexpr int n_samples = libdoa_const::n_samples;
-    static constexpr int n_antennas_axis = libdoa_const::n_antennas_axis;
-    static constexpr int n_antennas = libdoa_const::n_antennas;
-    static constexpr int n_subvector = libdoa_const::n_subvector;
-    static constexpr double antenna_gap_size = libdoa_const::antenna_gap_size;  // Size in meters
-    static constexpr int max_gradient_iterations = 1000;
+    bool was_max_iterations;  // Research purposes
+    static constexpr int max_iterations = 1e4;
+    static constexpr int speed_of_light = aoa_const::speed_of_light;
+    static constexpr int n_samples_ref = aoa_const::n_samples_ref;
+    static constexpr int n_samples = aoa_const::n_samples;
+    static constexpr int n_antennas_axis = aoa_const::n_antennas_axis;
+    static constexpr int n_antennas = aoa_const::n_antennas;
+    static constexpr int n_subvector = aoa_const::n_subvector;
+    static constexpr double antenna_gap_size = aoa_const::antenna_gap_size;  // Size in meters
     static constexpr std::array<int, n_subvector> signal_subvector_x_1_index = {0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14};
     static constexpr std::array<int, n_subvector> signal_subvector_x_2_index = {1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15};
     static constexpr std::array<int, n_subvector> signal_subvector_y_1_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
@@ -108,21 +114,22 @@ class DoaEstimator {
 
     // Main methods
     void load_samples(const SamplesData& in_samples);
-    DoaAngles process_esprit();
-    DoaAngles process_music(const MusicSearch search_method, const double grid_step,
+    AoaAngles process_esprit();
+    AoaAngles process_music(const MusicSearch search_method, const double grid_step,
                             const MusicOptimization optimization, const double coarse_step,
                             const GradientSpecs gradient_specs);
-    // double estimate_music_result(DoaAngles in_angles);
+    // double estimate_music_result(AoaAngles in_angles);
     // Music search algorithms
-    DoaAngles music_simple_grid_search(const double grid_step);
-    DoaAngles music_coarse_grid_search(const double finer_step, const double coarse_step, const MusicOptimization optimization, const GradientSpecs gradient_specs);
+    AoaAngles music_simple_grid_search(const double grid_step);
+    AoaAngles music_coarse_grid_search(const double finer_step, const double coarse_step, const MusicOptimization optimization, const GradientSpecs gradient_specs);
     // MusicOptimization algorithms
-    DoaAngles music_finer_grid_search(const DoaAngles coarse_angles, const double finer_step, double coarse_step);
-    DoaAngles music_gradient(const DoaAngles coarse_angles, const GradientSpecs gradient_specs);
-    DoaAngles music_gradient_momentum(const DoaAngles coarse_angles, const GradientSpecs gradient_specs);
+    AoaAngles music_finer_grid_search(const AoaAngles coarse_angles, const double finer_step, double coarse_step);
+    AoaAngles music_gradient_simple(const AoaAngles coarse_angles, const GradientSpecs gradient_specs);
+    AoaAngles music_gradient_simple_adapt_lr(const AoaAngles coarse_angles, const GradientSpecs gradient_specs);
+    AoaAngles music_gradient_momentum(const AoaAngles coarse_angles, const GradientSpecs gradient_specs);
     // Utility
-    DoaAngles shift_result_angles(DoaAngles result_angles);
+    AoaAngles shift_result_angles(AoaAngles result_angles);
     double normalize_angle_2pi(double angle);
 };
 
-#endif  // LIBDOA_DOA_ESTIMATOR_H
+#endif  // AOA_ESTIMATOR_H

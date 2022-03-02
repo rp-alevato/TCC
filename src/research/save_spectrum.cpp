@@ -1,4 +1,4 @@
-#include "libdoa/doa_estimator.h"
+#include "aoa/estimator.h"
 #include "misc/read_data_files.h"
 #include "misc/utility.h"
 
@@ -14,8 +14,7 @@ void music_save_spectrum(SamplesData& samples_data, double grid_step, std::strin
 int main() {
     std::vector<SamplesData> samples_data_list;
     read_files::get_iq_samples(samples_data_list, "data/iq_samples/close.txt");
-    std::cout << samples_data_list[830].sl_elevation << "\n";
-    music_save_spectrum(samples_data_list[830], M_PI / 180, "close_sample_0830.csv");
+    music_save_spectrum(samples_data_list[9705], M_PI / 180, "close_sample_9705.csv");
     // music_save_spectrum(samples_data_list[0], M_PI / 180, "close_sample_0000.csv");
     // music_save_spectrum(samples_data_list[21], M_PI / 180, "close_sample_0021.csv");
     // music_save_spectrum(samples_data_list[29], M_PI / 180, "close_sample_0029.csv");
@@ -30,14 +29,14 @@ void music_save_spectrum(SamplesData& samples_data, double const grid_step, std:
     std::vector<double> rows_labels;
     std::vector<double> cols_labels;
     std::vector<std::vector<double>> music_spectrum;
-    DoaEstimator doa_estimator;
+    AoaEstimator estimator;
     int azimuth_max_iter = (int)(2 * M_PI / grid_step);
     int elevation_max_iter = (int)(2 * M_PI / grid_step);
 
     std::cout << "Saving " + file_name + "...";
 
     // Load samples and calculate noise eigenvectors
-    doa_estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::simple_grid, M_PI / 2);
+    estimator.process_samples(samples_data, AoaTechnique::music, MusicSearch::simple_grid, M_PI / 2);
 
     for (int elevation_index = 0; elevation_index < elevation_max_iter; elevation_index++) {
         cols_labels.push_back(utility::angle_to_degree(elevation_index * grid_step));
@@ -53,7 +52,7 @@ void music_save_spectrum(SamplesData& samples_data, double const grid_step, std:
             // if (elevation > M_PI) {
             //     adjusted_azimuth += M_PI;
             // }
-            double result = doa_estimator.estimate_music_result({azimuth, elevation});
+            double result = estimator.estimate_music_result({azimuth, elevation});
             music_spectrum.back().push_back(result);
         }
     }

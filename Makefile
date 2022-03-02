@@ -4,6 +4,7 @@ MAKEFLAGS += -j4
 # Directories
 DIR_SOURCE:=src
 DIR_BUILD:=build
+DIR_RESEARCH:=$(DIR_BUILD)/research
 DIR_EIGEN:=lib/eigen
 DIRS_SOURCE:=$(shell find $(DIR_SOURCE) -type d)
 
@@ -12,14 +13,14 @@ SOURCES:=$(wildcard $(patsubst %,%/*.cpp, $(DIRS_SOURCE)))
 OBJECTS:=$(patsubst $(DIR_SOURCE)/%,$(DIR_BUILD)/%, $(SOURCES:.cpp=.o))
 
 # Dependencies
-DEPS_LIBDOA:=$(filter $(DIR_BUILD)/libdoa/%, $(OBJECTS))
+DEPS_AOA:=$(filter $(DIR_BUILD)/aoa/%, $(OBJECTS))
 DEPS_MISC:=$(filter $(DIR_BUILD)/misc/%, $(OBJECTS))
-DEPS_SAVE_SPECTRUM:=$(DIR_BUILD)/research/save_spectrum.o $(DEPS_LIBDOA) $(DEPS_MISC)
-DEPS_SAVE_MUSIC_RESULTS_ANGLES:=$(DIR_BUILD)/research/save_music_result_angles.o $(DEPS_LIBDOA) $(DEPS_MISC)
-DEPS_HP_ANALYSIS:=$(DIR_BUILD)/research/hp_analysis.o $(DEPS_LIBDOA) $(DEPS_MISC)
-DEPS_PRECISION_ANALYSIS:=$(DIR_BUILD)/research/precision_analysis.o $(DEPS_LIBDOA) $(DEPS_MISC)
-DEPS_CPP_TESTS:=$(DIR_BUILD)/cpp_tests/tests.o $(DEPS_LIBDOA) $(DEPS_MISC)
-DEPS_TEMP:=$(DIR_BUILD)/research/temp_tests.o $(DEPS_LIBDOA) $(DEPS_MISC)
+DEPS_SAVE_SPECTRUM:=$(DIR_RESEARCH)/save_spectrum.o $(DEPS_AOA) $(DEPS_MISC)
+DEPS_SAVE_MUSIC_RESULTS_ANGLES:=$(DIR_RESEARCH)/save_music_result_angles.o $(DEPS_AOA) $(DEPS_MISC)
+DEPS_HP_ANALYSIS:=$(DIR_RESEARCH)/hp_analysis.o $(DEPS_AOA) $(DEPS_MISC)
+DEPS_PRECISION_ANALYSIS:=$(DIR_RESEARCH)/precision_analysis.o $(DEPS_AOA) $(DEPS_MISC)
+DEPS_CPP_TESTS:=$(DIR_RESEARCH)/cpp_tests.o $(DEPS_AOA) $(DEPS_MISC)
+DEPS_SMALL_TESTS:=$(DIR_RESEARCH)/small_tests.o $(DEPS_AOA) $(DEPS_MISC)
 
 # Compiler and its flags
 CC=g++-10
@@ -51,7 +52,7 @@ cpp_tests: $(DEPS_CPP_TESTS)
 	$(CC) $(CXXFLAGS) $^ -o $@.exe
 	@echo "Done!\n"
 
-temp: $(DEPS_TEMP)
+small_tests: $(DEPS_SMALL_TESTS)
 	$(CC) $(CXXFLAGS) $^ -o $@.exe
 	@echo "Done!\n"
 

@@ -1,4 +1,4 @@
-#include "libdoa/doa_estimator.h"
+#include "aoa/estimator.h"
 #include "misc/progress_bar.h"
 #include "misc/read_data_files.h"
 #include "misc/statistics.h"
@@ -35,7 +35,7 @@ void precision_analysis(const std::string& filename) {
     const std::string output_filename = "data/experimental_results/precision/" + filename + ".csv";
 
     std::vector<SamplesData> samples_data;
-    std::vector<DoaAngles> music_results;
+    std::vector<AoaAngles> music_results;
     std::vector<double> music_results_len, music_results_az, music_results_el;
     std::vector<double> esprit_results_len, esprit_results_az, esprit_results_el;
     std::vector<double> sl_results_len, sl_results_az, sl_results_el;
@@ -52,7 +52,7 @@ void precision_analysis(const std::string& filename) {
     }
 
     std::cout << "Saving file " << output_filename << " ...\n";
-    DoaEstimator doa_estimator;
+    AoaEstimator estimator;
     for (auto result : music_results) {
         double azimuth = utility::angle_to_degree(result.azimuth);
         double elevation = utility::angle_to_degree(result.elevation);
@@ -61,7 +61,7 @@ void precision_analysis(const std::string& filename) {
         music_results_el.push_back(elevation);
     }
     for (auto sample : samples_data) {
-        DoaAngles esprit_result = doa_estimator.process_samples(sample, DoaTechnique::esprit);
+        AoaAngles esprit_result = estimator.process_samples(sample, AoaTechnique::esprit);
         double azimuth = utility::angle_to_degree(esprit_result.azimuth);
         double elevation = utility::angle_to_degree(esprit_result.elevation);
         esprit_results_len.push_back(std::hypot(azimuth, elevation));

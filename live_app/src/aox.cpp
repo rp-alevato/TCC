@@ -27,9 +27,9 @@
 #include <unistd.h>
 
 // BGAPI libraries
+#include "aoa/estimator.h"
 #include "aox.h"
 #include "bg_types.h"
-#include "doa_estimator.h"
 
 extern "C" {
 #include "sl_rtl_clib_api.h"
@@ -128,9 +128,9 @@ THREAD_RETURN_T aoxMain(void* args) {
         aoxInit(args);
     }
 
-    // Define and initialize custom DoA estimator
-    DoaEstimator estimator;
-    DoaAngles angles;
+    // Define and initialize custom AoA estimator
+    AoaEstimator estimator;
+    AoaAngles angles;
 
     while (eAppCtrl != eAOX_SHUTDOWN) {
         // Wait for new IQ samples
@@ -192,11 +192,11 @@ static void aoxWaitNewSamples() {
         }
     }
 
-    // // Process new IQ Samples using the custom DoA estimator
-    // static DoaEstimator estimator;
-    // DoaAngles angles;
+    // // Process new IQ Samples using the custom AoA estimator
+    // static AoaEstimator estimator;
+    // AoaAngles angles;
     // estimator.load_samples(samples_data);
-    // angles = estimator.process_samples(DoaTechnique::music, MusicSearch::linear_grid_gradient, M_PI / 10);
+    // angles = estimator.process_samples(AoaTechnique::music, MusicSearch::linear_grid_gradient, M_PI / 10);
     // printf("Azimuth: %6.1f  \tElevation: %6.1f  \trssi: %6.0f \tch: %2d\n",
     //        (angles.azimuth * 180 / M_PI), (angles.elevation * 180 / M_PI), iqSamples.rssi / 1.0, iqSamples.channel);
 
