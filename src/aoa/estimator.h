@@ -57,7 +57,8 @@ enum class MusicOptimization {
     finer_grid_search,
     gradient_simple,
     gradient_adapt_lr,
-    gradient_momentum
+    gradient_momentum,
+    gradient_nesterov
 };
 
 class AoaEstimator {
@@ -127,6 +128,7 @@ class AoaEstimator {
     AoaAngles music_gradient_simple(const AoaAngles coarse_angles, const GradientSpecs gradient_specs);
     AoaAngles music_gradient_simple_adapt_lr(const AoaAngles coarse_angles, const GradientSpecs gradient_specs);
     AoaAngles music_gradient_momentum(const AoaAngles coarse_angles, const GradientSpecs gradient_specs);
+    AoaAngles music_gradient_nesterov(const AoaAngles coarse_angles, const GradientSpecs gradient_specs);
     // Utility
     AoaAngles shift_result_angles(AoaAngles result_angles);
     double normalize_angle_2pi(double angle);
