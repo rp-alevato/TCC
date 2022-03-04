@@ -211,16 +211,16 @@ void gradient_simple_analysis(const std::string output_filename, const std::vect
         coarse_steps.push_back(i);
     }
 
-    for (double i = 0.007; i <= 0.0091; i += 0.001) {
+    for (double i = 0.007; i <= 0.0091; i += 0.002) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.01; i <= 0.061; i += 0.005) {
+    for (double i = 0.01; i <= 0.041; i += 0.005) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.07; i <= 0.091; i += 0.01) {
+    for (double i = 0.05; i <= 0.091; i += 0.02) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.1; i <= 0.51; i += 0.2) {
+    for (double i = 0.1; i <= 0.31; i += 0.2) {
         learning_rates.push_back(i);
     }
 
@@ -268,7 +268,7 @@ void gradient_adapt_lr_analysis(const std::string output_filename, const std::ve
     for (double i = 0.01; i <= 0.091; i += 0.02) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.095; i <= 0.451; i += 0.005) {
+    for (double i = 0.095; i <= 0.451; i += 0.05) {
         learning_rates.push_back(i);
     }
     for (double i = 0.5; i <= 0.91; i += 0.2) {
@@ -319,7 +319,7 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
     for (double i = 0.005; i <= 0.0091; i += 0.002) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.01; i <= 0.0401; i += 0.005) {
+    for (double i = 0.01; i <= 0.041; i += 0.005) {
         learning_rates.push_back(i);
     }
     for (double i = 0.05; i <= 0.091; i += 0.02) {
