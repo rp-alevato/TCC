@@ -298,10 +298,10 @@ AoaAngles AoaEstimator::music_gradient_simple_adapt_lr(const AoaAngles coarse_an
         continue_azimuth = std::abs(gradient_azimuth) > threshold;
         continue_elevation = std::abs(gradient_elevation) > threshold;
 
-        std::cout << "it: " << iterations << "\n";
-        std::cout << "gr: " << gradient_azimuth << ", " << gradient_elevation << "\n";
-        std::cout << "st: " << azimuth_step << ", " << elevation_step << "\n";
-        std::cout << "rs: " << result_angles.azimuth << ", " << result_angles.elevation << "\n";
+        // std::cout << "it: " << iterations << "\n";
+        // std::cout << "gr: " << gradient_azimuth << ", " << gradient_elevation << "\n";
+        // std::cout << "st: " << azimuth_step << ", " << elevation_step << "\n";
+        // std::cout << "rs: " << result_angles.azimuth << ", " << result_angles.elevation << "\n";
     } while ((continue_azimuth || continue_elevation)
              && (iterations < this->max_iterations));
 
@@ -344,10 +344,10 @@ AoaAngles AoaEstimator::music_gradient_momentum(const AoaAngles coarse_angles, c
         continue_azimuth = std::abs(gradient_azimuth) > threshold;
         continue_elevation = std::abs(gradient_elevation) > threshold;
 
-        std::cout << "it: " << iterations << "\n";
-        std::cout << "gr: " << gradient_azimuth << ", " << gradient_elevation << "\n";
-        std::cout << "st: " << azimuth_step << ", " << elevation_step << "\n";
-        std::cout << "rs: " << result_angles.azimuth << ", " << result_angles.elevation << "\n";
+        // std::cout << "it: " << iterations << "\n";
+        // std::cout << "gr: " << gradient_azimuth << ", " << gradient_elevation << "\n";
+        // std::cout << "st: " << azimuth_step << ", " << elevation_step << "\n";
+        // std::cout << "rs: " << result_angles.azimuth << ", " << result_angles.elevation << "\n";
     } while ((continue_azimuth || continue_elevation)
              && (iterations < this->max_iterations));
 
@@ -392,10 +392,10 @@ AoaAngles AoaEstimator::music_gradient_nesterov(const AoaAngles coarse_angles, c
         continue_azimuth = std::abs(gradient_azimuth) > threshold;
         continue_elevation = std::abs(gradient_elevation) > threshold;
 
-        std::cout << "it: " << iterations << "\n";
-        std::cout << "gr: " << gradient_azimuth << ", " << gradient_elevation << "\n";
-        std::cout << "st: " << azimuth_step << ", " << elevation_step << "\n";
-        std::cout << "rs: " << result_angles.azimuth << ", " << result_angles.elevation << "\n";
+        // std::cout << "it: " << iterations << "\n";
+        // std::cout << "gr: " << gradient_azimuth << ", " << gradient_elevation << "\n";
+        // std::cout << "st: " << azimuth_step << ", " << elevation_step << "\n";
+        // std::cout << "rs: " << result_angles.azimuth << ", " << result_angles.elevation << "\n";
     } while ((continue_azimuth || continue_elevation)
              && (iterations < this->max_iterations));
 

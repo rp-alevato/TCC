@@ -42,6 +42,10 @@ void gradient_adapt_lr_analysis(const std::string output_filename, const std::ve
 void complete_gradient_momentum_analysis();
 void gradient_momentum_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
                                 const std::vector<AoaAngles>& correct_results_vector);
+//  Gradient nesterov functions
+void complete_gradient_nesterov_analysis();
+void gradient_nesterov_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
+                                const std::vector<AoaAngles>& correct_results_vector);
 // Utility functions
 void get_training_data(std::vector<SamplesData>& training_samples_close, std::vector<AoaAngles>& training_results_close,
                        std::vector<SamplesData>& training_samples_walk, std::vector<AoaAngles>& training_results_walk,
@@ -58,6 +62,7 @@ int main() {
     complete_gradient_simple_analysis();
     complete_gradient_adapt_lr_analysis();
     complete_gradient_momentum_analysis();
+    complete_gradient_nesterov_analysis();
     return 0;
 }
 
@@ -129,6 +134,24 @@ void complete_gradient_momentum_analysis() {
     gradient_momentum_analysis("gradient_momentum_walk.csv", training_samples_walk, training_results_walk);
     std::cout << "Gradient momentum analysis: both:\n";
     gradient_momentum_analysis("gradient_momentum_both.csv", training_samples_both, training_results_both);
+
+    return;
+}
+
+void complete_gradient_nesterov_analysis() {
+    std::vector<SamplesData> training_samples_close, training_samples_walk, training_samples_both;
+    std::vector<AoaAngles> training_results_close, training_results_walk, training_results_both;
+
+    get_training_data(training_samples_close, training_results_close,
+                      training_samples_walk, training_results_walk,
+                      training_samples_both, training_results_both);
+
+    std::cout << "Gradient nesterov analysis: close.txt:\n";
+    gradient_nesterov_analysis("gradient_nesterov_close.csv", training_samples_close, training_results_close);
+    std::cout << "Gradient nesterov analysis: walk.txt:\n";
+    gradient_nesterov_analysis("gradient_nesterov_walk.csv", training_samples_walk, training_results_walk);
+    std::cout << "Gradient nesterov analysis: both:\n";
+    gradient_nesterov_analysis("gradient_nesterov_both.csv", training_samples_both, training_results_both);
 
     return;
 }
@@ -245,7 +268,7 @@ void gradient_adapt_lr_analysis(const std::string output_filename, const std::ve
     for (double i = 0.01; i <= 0.091; i += 0.02) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.095; i <= 0.451; i += 0.05) {
+    for (double i = 0.095; i <= 0.451; i += 0.005) {
         learning_rates.push_back(i);
     }
     for (double i = 0.5; i <= 0.91; i += 0.2) {
@@ -263,7 +286,7 @@ void gradient_adapt_lr_analysis(const std::string output_filename, const std::ve
             double learning_rate = learning_rates[lr_index];
             std::cout << "cs: " << std::setw(2) << coarse_step << "    "
                       << "lr: " << std::setw(4) << learning_rate << "\n";
-            save_csv_info_for_every_sample(output_csv, "gradient_simple", samples_data,
+            save_csv_info_for_every_sample(output_csv, "gradient_adapt_lr", samples_data,
                                            correct_results_vector, MusicOptimization::gradient_adapt_lr,
                                            coarse_step, learning_rate, 0);
         }
@@ -293,23 +316,20 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
         coarse_steps.push_back(i);
     }
 
-    for (double i = 0.003; i <= 0.0051; i += 0.002) {
+    for (double i = 0.005; i <= 0.0091; i += 0.002) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.006; i <= 0.0091; i += 0.001) {
-        learning_rates.push_back(i);
-    }
-    for (double i = 0.01; i <= 0.0451; i += 0.005) {
+    for (double i = 0.01; i <= 0.0401; i += 0.005) {
         learning_rates.push_back(i);
     }
     for (double i = 0.05; i <= 0.091; i += 0.02) {
         learning_rates.push_back(i);
     }
 
-    for (double i = 0.1; i <= 0.51; i += 0.2) {
+    for (double i = 0.5; i <= 0.71; i += 0.2) {
         momentums.push_back(i);
     }
-    for (double i = 0.6; i <= 0.951; i += 0.05) {
+    for (double i = 0.75; i <= 0.951; i += 0.05) {
         momentums.push_back(i);
     }
 
@@ -330,6 +350,69 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
                           << "mm: " << std::setw(4) << std::left << momentum << "\n";
                 save_csv_info_for_every_sample(output_csv, "gradient_momentum", samples_data,
                                                correct_results_vector, MusicOptimization::gradient_momentum,
+                                               coarse_step, learning_rate, momentum);
+            }
+        }
+    }
+
+    output_csv.close();
+    std::cout << "\n";
+    return;
+}
+
+void gradient_nesterov_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
+                                const std::vector<AoaAngles>& correct_results_vector) {
+    std::ofstream output_csv;
+    AoaEstimator estimator;
+    std::vector<double> coarse_steps, learning_rates, momentums;
+    const std::string output_name = output_dir + output_filename;
+
+    if (std::filesystem::exists(output_name)) {
+        throw std::runtime_error("File " + output_name + " exists.\n\t   Please remove file if you want to overwrite it.\n");
+    }
+    output_csv.open(output_name);
+    if (!output_csv.is_open()) {
+        throw std::runtime_error("Error opening file " + output_name);
+    }
+
+    for (std::size_t i = 1; i <= 15; i += 1) {
+        coarse_steps.push_back(i);
+    }
+
+    for (double i = 0.005; i <= 0.0091; i += 0.002) {
+        learning_rates.push_back(i);
+    }
+    for (double i = 0.01; i <= 0.0401; i += 0.005) {
+        learning_rates.push_back(i);
+    }
+    for (double i = 0.05; i <= 0.091; i += 0.02) {
+        learning_rates.push_back(i);
+    }
+
+    for (double i = 0.5; i <= 0.71; i += 0.2) {
+        momentums.push_back(i);
+    }
+    for (double i = 0.75; i <= 0.951; i += 0.05) {
+        momentums.push_back(i);
+    }
+
+    make_csv_columns(output_csv, "gradient_nesterov");
+
+    std::cout << "Total number of coarse_steps: " << coarse_steps.size() << "\n";
+    std::cout << "Total number of learning_rates: " << learning_rates.size() << "\n";
+    std::cout << "Total number of momentums: " << momentums.size() << "\n";
+
+    for (std::size_t coarse_index = 0; coarse_index < coarse_steps.size(); coarse_index++) {
+        double coarse_step = coarse_steps[coarse_index];
+        for (std::size_t lr_index = 0; lr_index < learning_rates.size(); lr_index++) {
+            double learning_rate = learning_rates[lr_index];
+            for (std::size_t m_index = 0; m_index < momentums.size(); m_index++) {
+                double momentum = momentums[m_index];
+                std::cout << "cs: " << std::setw(2) << std::right << coarse_step << "    "
+                          << "lr: " << std::setw(5) << std::left << learning_rate << "    "
+                          << "mm: " << std::setw(4) << std::left << momentum << "\n";
+                save_csv_info_for_every_sample(output_csv, "gradient_nesterov", samples_data,
+                                               correct_results_vector, MusicOptimization::gradient_nesterov,
                                                coarse_step, learning_rate, momentum);
             }
         }
@@ -426,9 +509,9 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
 
     // Save values to CSV.
     output_csv << coarse_step << ",";
-    if (analysis_method == "gradient_simple") {
+    if (analysis_method == "gradient_simple" || analysis_method == "gradient_adapt_lr") {
         output_csv << learning_rate << ",";
-    } else if (analysis_method == "gradient_momentum") {
+    } else if (analysis_method == "gradient_momentum" || analysis_method == "gradient_nesterov") {
         output_csv << learning_rate << ",";
         output_csv << momentum << ",";
     }
@@ -495,7 +578,7 @@ void make_csv_columns(std::ofstream& output_csv, const std::string analysis_meth
     output_csv << "coarse_step,";
     if (analysis_method == "gradient_simple" || analysis_method == "gradient_adapt_lr") {
         output_csv << "learning_rate,";
-    } else if (analysis_method == "gradient_momentum") {
+    } else if (analysis_method == "gradient_momentum" || analysis_method == "gradient_nesterov") {
         output_csv << "learning_rate,momentum,";
     }
     output_csv << "runtime,n_max_iterations,accuracy,"
