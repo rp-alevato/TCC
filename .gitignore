@@ -1,5 +1,5 @@
 # VScode
 .vscode
-build
-sim
-liveapp
+build/
+.ipynb_checkpoints
+*.exe
