@@ -1,4 +1,4 @@
-#include "aoa/estimator.h"
+#include "doa/estimator.h"
 #include "misc/read_data_files.h"
 #include "misc/utility.h"
 
@@ -29,14 +29,14 @@ void music_save_spectrum(SamplesData& samples_data, double const grid_step, std:
     std::vector<double> rows_labels;
     std::vector<double> cols_labels;
     std::vector<std::vector<double>> music_spectrum;
-    AoaEstimator estimator;
+    DoaEstimator estimator;
     int azimuth_max_iter = (int)(2 * M_PI / grid_step);
     int elevation_max_iter = (int)(2 * M_PI / grid_step);
 
     std::cout << "Saving " + file_name + "...";
 
     // Load samples and calculate noise eigenvectors
-    estimator.process_samples(samples_data, AoaTechnique::music, MusicSearch::simple_grid, M_PI / 2);
+    estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::simple_grid, M_PI / 2);
 
     for (int elevation_index = 0; elevation_index < elevation_max_iter; elevation_index++) {
         cols_labels.push_back(utility::angle_to_degree(elevation_index * grid_step));

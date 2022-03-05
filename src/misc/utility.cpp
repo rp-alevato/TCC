@@ -36,7 +36,7 @@ bool utility::is_equal_double(const double x, const double y, const double epsil
     return (std::abs(x - y) < epsilon);
 }
 
-bool utility::is_equal_angles(const AoaAngles x, const AoaAngles y, const double epsilon) {
+bool utility::is_equal_angles(const DoaAngles x, const DoaAngles y, const double epsilon) {
     bool azimuth_equal = utility::is_equal_double(x.azimuth, y.azimuth, epsilon);
     bool elevation_equal = utility::is_equal_double(x.elevation, y.elevation, epsilon);
     return (azimuth_equal && elevation_equal);
@@ -50,13 +50,13 @@ double utility::angle_to_pi(const double angle) {
     return angle * M_PI / 180;
 }
 
-AoaAngles utility::angles_to_degree(AoaAngles angles) {
+DoaAngles utility::angles_to_degree(DoaAngles angles) {
     angles.azimuth = angle_to_degree(angles.azimuth);
     angles.elevation = angle_to_degree(angles.elevation);
     return angles;
 }
 
-AoaAngles utility::angles_to_pi(AoaAngles angles) {
+DoaAngles utility::angles_to_pi(DoaAngles angles) {
     angles.azimuth = angle_to_pi(angles.azimuth);
     angles.elevation = angle_to_pi(angles.elevation);
     return angles;

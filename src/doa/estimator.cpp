@@ -7,8 +7,8 @@
 // ******************************  MAIN METHODS *******************************
 // ****************************************************************************
 
-AoaAngles AoaEstimator::process_samples(const SamplesData& in_samples,
-                                        const AoaTechnique technique,
+DoaAngles DoaEstimator::process_samples(const SamplesData& in_samples,
+                                        const DoaTechnique technique,
                                         const MusicSearch search_method,
                                         const double grid_step,
                                         const MusicOptimization optimization,
@@ -22,16 +22,16 @@ AoaAngles AoaEstimator::process_samples(const SamplesData& in_samples,
     this->signal_eigenvector = eigensolver.eigenvectors().block(0, (n_antennas - 1), n_antennas, 1);
     this->phase_constant = (2 * M_PI * this->antenna_gap_size * this->channel_frequency) / speed_of_light;
 
-    if (technique == AoaTechnique::music) {
+    if (technique == DoaTechnique::music) {
         return this->process_music(search_method, grid_step, optimization, coarse_step, gradient_specs);
-    } else if (technique == AoaTechnique::esprit) {
+    } else if (technique == DoaTechnique::esprit) {
         return this->process_esprit();
     }
 
     return {std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
 }
 
-void AoaEstimator::load_samples(const SamplesData& samples_data) {
+void DoaEstimator::load_samples(const SamplesData& samples_data) {
 
     this->channel_frequency = samples_data.channel_frequency;
 
@@ -60,9 +60,9 @@ void AoaEstimator::load_samples(const SamplesData& samples_data) {
     return;
 }
 
-AoaAngles AoaEstimator::process_esprit() {
+DoaAngles DoaEstimator::process_esprit() {
     double phase_x, phase_y;
-    AoaAngles result_angles = {0, 0};
+    DoaAngles result_angles = {0, 0};
 
     this->signal_subvector_x_1 = this->signal_eigenvector(this->signal_subvector_x_1_index);
     this->signal_subvector_x_2 = this->signal_eigenvector(this->signal_subvector_x_2_index);
@@ -83,10 +83,10 @@ AoaAngles AoaEstimator::process_esprit() {
     return result_angles;
 }
 
-AoaAngles AoaEstimator::process_music(const MusicSearch search_method, const double grid_step,
+DoaAngles DoaEstimator::process_music(const MusicSearch search_method, const double grid_step,
                                       const MusicOptimization optimization, const double coarse_step,
                                       const GradientSpecs gradient_specs) {
-    AoaAngles result_angles;
+    DoaAngles result_angles;
     this->noise_eigenvectors_product = this->noise_eigenvectors * this->noise_eigenvectors.adjoint();
     switch (search_method) {
         case MusicSearch::simple_grid:
@@ -105,7 +105,7 @@ AoaAngles AoaEstimator::process_music(const MusicSearch search_method, const dou
     return result_angles;
 }
 
-double AoaEstimator::estimate_music_result(const AoaAngles angles) {
+double DoaEstimator::estimate_music_result(const DoaAngles angles) {
     Eigen::dcomplex music_result_complex;
     double phase_x = this->phase_constant * std::cos(angles.azimuth) * std::sin(angles.elevation);
     double phase_y = this->phase_constant * std::sin(angles.azimuth) * std::sin(angles.elevation);
@@ -129,10 +129,10 @@ double AoaEstimator::estimate_music_result(const AoaAngles angles) {
 // ****************************************************************************
 // *************************  MUSIC SEARCH ALGORITHMS *************************
 // ****************************************************************************
-AoaAngles AoaEstimator::music_simple_grid_search(const double grid_step) {
+DoaAngles DoaEstimator::music_simple_grid_search(const double grid_step) {
     int azimuth_max_steps = (int)(2 * M_PI / grid_step);
     int elevation_max_steps = (int)((M_PI / 2) / grid_step);
-    AoaAngles result_angles = {0, 0};
+    DoaAngles result_angles = {0, 0};
     double maximum_result = 0;
 
     for (int azimuth_index = 0; azimuth_index <= azimuth_max_steps; azimuth_index++) {
@@ -149,11 +149,11 @@ AoaAngles AoaEstimator::music_simple_grid_search(const double grid_step) {
     return result_angles;
 }
 
-AoaAngles AoaEstimator::music_coarse_grid_search(const double finer_step, const double coarse_step,
+DoaAngles DoaEstimator::music_coarse_grid_search(const double finer_step, const double coarse_step,
                                                  MusicOptimization optimization, GradientSpecs gradient_specs) {
     int azimuth_max_steps = (int)(2 * M_PI / coarse_step);
     int elevation_max_steps = (int)((M_PI / 2) / coarse_step);
-    AoaAngles coarse_angles = {0, 0};
+    DoaAngles coarse_angles = {0, 0};
     double maximum_result = 0;
 
     int counter = 0;
@@ -197,7 +197,7 @@ AoaAngles AoaEstimator::music_coarse_grid_search(const double finer_step, const 
 // ****************************************************************************
 // *************************  OPTIMIZATION ALGORITHMS *************************
 // ****************************************************************************
-AoaAngles AoaEstimator::music_finer_grid_search(const AoaAngles coarse_angles,
+DoaAngles DoaEstimator::music_finer_grid_search(const DoaAngles coarse_angles,
                                                 const double finer_step,
                                                 double coarse_step) {
     coarse_step += std::abs(std::remainder((M_PI / 2), coarse_step));
@@ -206,7 +206,7 @@ AoaAngles AoaEstimator::music_finer_grid_search(const AoaAngles coarse_angles,
     int elevation_init_steps = (int)((coarse_angles.elevation - coarse_step) / finer_step);
     int azimuth_max_steps = (int)((coarse_angles.azimuth + coarse_step) / finer_step);
     int elevation_max_steps = (int)((coarse_angles.elevation + coarse_step) / finer_step);
-    AoaAngles result_angles = {0, 0};
+    DoaAngles result_angles = {0, 0};
     double maximum_result = 0;
 
     for (int azimuth_index = azimuth_init_steps; azimuth_index <= azimuth_max_steps; azimuth_index++) {
@@ -224,13 +224,13 @@ AoaAngles AoaEstimator::music_finer_grid_search(const AoaAngles coarse_angles,
     return this->shift_result_angles(result_angles);
 }
 
-AoaAngles AoaEstimator::music_gradient_simple(const AoaAngles coarse_angles, const GradientSpecs gradient_specs) {
+DoaAngles DoaEstimator::music_gradient_simple(const DoaAngles coarse_angles, const GradientSpecs gradient_specs) {
     double learning_rate = gradient_specs.learning_rate;
     double threshold = gradient_specs.threshold;
     double diff_step = gradient_specs.diff_step;
     bool continue_azimuth = false;
     bool continue_elevation = false;
-    AoaAngles result_angles = coarse_angles;
+    DoaAngles result_angles = coarse_angles;
     int iterations = 0;
     this->was_max_iterations = false;
 
@@ -260,7 +260,7 @@ AoaAngles AoaEstimator::music_gradient_simple(const AoaAngles coarse_angles, con
     return this->shift_result_angles(result_angles);
 }
 
-AoaAngles AoaEstimator::music_gradient_simple_adapt_lr(const AoaAngles coarse_angles, const GradientSpecs gradient_specs) {
+DoaAngles DoaEstimator::music_gradient_simple_adapt_lr(const DoaAngles coarse_angles, const GradientSpecs gradient_specs) {
     double learning_rate = gradient_specs.learning_rate;
     double threshold = gradient_specs.threshold;
     double diff_step = gradient_specs.diff_step;
@@ -268,7 +268,7 @@ AoaAngles AoaEstimator::music_gradient_simple_adapt_lr(const AoaAngles coarse_an
     double prev_gradient_elevation;
     bool continue_azimuth = false;
     bool continue_elevation = false;
-    AoaAngles result_angles = coarse_angles;
+    DoaAngles result_angles = coarse_angles;
     int iterations = 0;
     this->was_max_iterations = false;
 
@@ -312,14 +312,14 @@ AoaAngles AoaEstimator::music_gradient_simple_adapt_lr(const AoaAngles coarse_an
     return this->shift_result_angles(result_angles);
 }
 
-AoaAngles AoaEstimator::music_gradient_momentum(const AoaAngles coarse_angles, const GradientSpecs gradient_specs) {
+DoaAngles DoaEstimator::music_gradient_momentum(const DoaAngles coarse_angles, const GradientSpecs gradient_specs) {
     double learning_rate = gradient_specs.learning_rate;
     double threshold = gradient_specs.threshold;
     double diff_step = gradient_specs.diff_step;
     double momentum = gradient_specs.momentum;
     bool continue_azimuth = true;
     bool continue_elevation = true;
-    AoaAngles result_angles = coarse_angles;
+    DoaAngles result_angles = coarse_angles;
     double prev_step_azimuth = 0;
     double prev_step_elevation = 0;
     int iterations = 0;
@@ -358,14 +358,14 @@ AoaAngles AoaEstimator::music_gradient_momentum(const AoaAngles coarse_angles, c
     return this->shift_result_angles(result_angles);
 }
 
-AoaAngles AoaEstimator::music_gradient_nesterov(const AoaAngles coarse_angles, const GradientSpecs gradient_specs) {
+DoaAngles DoaEstimator::music_gradient_nesterov(const DoaAngles coarse_angles, const GradientSpecs gradient_specs) {
     double learning_rate = gradient_specs.learning_rate;
     double threshold = gradient_specs.threshold;
     double diff_step = gradient_specs.diff_step;
     double momentum = gradient_specs.momentum;
     bool continue_azimuth = true;
     bool continue_elevation = true;
-    AoaAngles result_angles = coarse_angles;
+    DoaAngles result_angles = coarse_angles;
     double prev_step_azimuth = 0;
     double prev_step_elevation = 0;
     int iterations = 0;
@@ -374,7 +374,7 @@ AoaAngles AoaEstimator::music_gradient_nesterov(const AoaAngles coarse_angles, c
     do {
         iterations++;
         double gradient_azimuth, gradient_elevation;
-        AoaAngles future_angles = {result_angles.azimuth + momentum * prev_step_azimuth,
+        DoaAngles future_angles = {result_angles.azimuth + momentum * prev_step_azimuth,
                                    result_angles.elevation + momentum * prev_step_elevation};
         double curr_music_result = this->estimate_music_result(future_angles);
         gradient_azimuth = this->estimate_music_result({future_angles.azimuth + diff_step, future_angles.elevation});
@@ -410,7 +410,7 @@ AoaAngles AoaEstimator::music_gradient_nesterov(const AoaAngles coarse_angles, c
 // *****************************  UTILITY METHODS *****************************
 // ****************************************************************************
 
-AoaAngles AoaEstimator::shift_result_angles(AoaAngles result_angles) {
+DoaAngles DoaEstimator::shift_result_angles(DoaAngles result_angles) {
     result_angles.elevation = this->normalize_angle_2pi(result_angles.elevation);
     if (result_angles.elevation > M_PI) {
         result_angles.elevation = (2 * M_PI) - result_angles.elevation;
@@ -424,7 +424,7 @@ AoaAngles AoaEstimator::shift_result_angles(AoaAngles result_angles) {
     return result_angles;
 }
 
-double AoaEstimator::normalize_angle_2pi(double angle) {
+double DoaEstimator::normalize_angle_2pi(double angle) {
     angle = std::fmod(angle, (2 * M_PI));
     if (angle < 0)
         angle += (2 * M_PI);

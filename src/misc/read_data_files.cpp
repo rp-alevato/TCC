@@ -90,7 +90,7 @@ int get_iq_samples_reference(SamplesData& samples_data, std::ifstream& iq_file) 
 
     std::getline(iq_file, line);  // Throw away line with "reference samples:"
 
-    for (auto i = 0; i < aoa_const::n_samples_ref; i++) {
+    for (auto i = 0; i < doa_const::n_samples_ref; i++) {
         std::getline(iq_file, line);
         if (iq_file.eof()) {
             return -1;
@@ -110,14 +110,14 @@ int get_iq_samples_main(SamplesData& samples_data, std::ifstream& iq_file) {
 
     std::getline(iq_file, line);  // Throw away line with "samples:"
 
-    for (auto i = 0; i < aoa_const::n_antennas; i++) {
+    for (auto i = 0; i < doa_const::n_antennas; i++) {
         std::getline(iq_file, line);
         if (iq_file.eof()) {
             return -1;
         }
         std::string::size_type begin_position = 0;
         std::string::size_type end_position = 0;
-        for (auto j = 0; j < aoa_const::n_samples; j++) {
+        for (auto j = 0; j < doa_const::n_samples; j++) {
             end_position = line.find(")", begin_position);
             if (end_position == std::string::npos) {
                 return -1;
@@ -139,11 +139,11 @@ int get_iq_samples_main(SamplesData& samples_data, std::ifstream& iq_file) {
 // *****************************  MUSIC RESULTS  ******************************
 // ****************************************************************************
 
-void read_files::get_music_result_angles(std::vector<AoaAngles>& music_results, const std::string& file_name) {
+void read_files::get_music_result_angles(std::vector<DoaAngles>& music_results, const std::string& file_name) {
     std::ifstream music_results_file;
     std::string line;
     Eigen::dcomplex azimuth_elevation;
-    AoaAngles current_angle;
+    DoaAngles current_angle;
 
     music_results_file.open(file_name);
     if (!music_results_file.is_open()) {

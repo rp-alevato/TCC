@@ -13,7 +13,7 @@ SOURCES:=$(wildcard $(patsubst %,%/*.cpp, $(DIRS_SOURCE)))
 OBJECTS:=$(patsubst $(DIR_SOURCE)/%,$(DIR_BUILD)/%, $(SOURCES:.cpp=.o))
 
 # Dependencies
-DEPS_AOA:=$(filter $(DIR_BUILD)/aoa/%, $(OBJECTS))
+DEPS_AOA:=$(filter $(DIR_BUILD)/doa/%, $(OBJECTS))
 DEPS_MISC:=$(filter $(DIR_BUILD)/misc/%, $(OBJECTS))
 DEPS_SAVE_SPECTRUM:=$(DIR_RESEARCH)/save_spectrum.o $(DEPS_AOA) $(DEPS_MISC)
 DEPS_SAVE_MUSIC_RESULTS_ANGLES:=$(DIR_RESEARCH)/save_music_result_angles.o $(DEPS_AOA) $(DEPS_MISC)
