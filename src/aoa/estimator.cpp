@@ -123,7 +123,7 @@ double AoaEstimator::estimate_music_result(const AoaAngles angles) {
                            * this->noise_eigenvectors_product
                            * this->steering_vector;
 
-    return (1 / music_result_complex.real());
+    return (1 / std::abs(music_result_complex));
 }
 
 // ****************************************************************************
