@@ -90,10 +90,10 @@ class DoaEstimator {
     static constexpr int n_antennas = doa_const::n_antennas;
     static constexpr int n_subvector = doa_const::n_subvector;
     static constexpr double antenna_gap_size = doa_const::antenna_gap_size;  // Size in meters
-    static constexpr std::array<int, n_subvector> signal_subvector_x_1_index = {0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14};
-    static constexpr std::array<int, n_subvector> signal_subvector_x_2_index = {1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15};
-    static constexpr std::array<int, n_subvector> signal_subvector_y_1_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-    static constexpr std::array<int, n_subvector> signal_subvector_y_2_index = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    static constexpr std::array<int, n_subvector> signal_subarray_x_1_index = {0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14};
+    static constexpr std::array<int, n_subvector> signal_subarray_x_2_index = {1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15};
+    static constexpr std::array<int, n_subvector> signal_subarray_y_1_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    static constexpr std::array<int, n_subvector> signal_subarray_y_2_index = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     double channel_frequency;
     double phase_constant;
     Eigen::Matrix<Eigen::dcomplex, n_antennas, n_samples> samples;
@@ -108,10 +108,10 @@ class DoaEstimator {
 
     // Esprit only variables
     Eigen::Matrix<Eigen::dcomplex, n_antennas, 1> signal_eigenvector;
-    Eigen::Matrix<Eigen::dcomplex, n_subvector, 1> signal_subvector_x_1;
-    Eigen::Matrix<Eigen::dcomplex, n_subvector, 1> signal_subvector_x_2;
-    Eigen::Matrix<Eigen::dcomplex, n_subvector, 1> signal_subvector_y_1;
-    Eigen::Matrix<Eigen::dcomplex, n_subvector, 1> signal_subvector_y_2;
+    Eigen::Matrix<Eigen::dcomplex, n_subvector, 1> signal_subarray_x_1;
+    Eigen::Matrix<Eigen::dcomplex, n_subvector, 1> signal_subarray_x_2;
+    Eigen::Matrix<Eigen::dcomplex, n_subvector, 1> signal_subarray_y_1;
+    Eigen::Matrix<Eigen::dcomplex, n_subvector, 1> signal_subarray_y_2;
 
     // Main methods
     void load_samples(const SamplesData& in_samples);

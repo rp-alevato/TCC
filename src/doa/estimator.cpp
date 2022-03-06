@@ -64,15 +64,15 @@ DoaAngles DoaEstimator::process_esprit() {
     double phase_x, phase_y;
     DoaAngles result_angles = {0, 0};
 
-    this->signal_subvector_x_1 = this->signal_eigenvector(this->signal_subvector_x_1_index);
-    this->signal_subvector_x_2 = this->signal_eigenvector(this->signal_subvector_x_2_index);
-    this->signal_subvector_y_1 = this->signal_eigenvector(this->signal_subvector_y_1_index);
-    this->signal_subvector_y_2 = this->signal_eigenvector(this->signal_subvector_y_2_index);
+    this->signal_subarray_x_1 = this->signal_eigenvector(this->signal_subarray_x_1_index);
+    this->signal_subarray_x_2 = this->signal_eigenvector(this->signal_subarray_x_2_index);
+    this->signal_subarray_y_1 = this->signal_eigenvector(this->signal_subarray_y_1_index);
+    this->signal_subarray_y_2 = this->signal_eigenvector(this->signal_subarray_y_2_index);
 
-    phase_x = std::arg(((this->signal_subvector_x_1.adjoint() * this->signal_subvector_x_1).inverse()
-                        * (this->signal_subvector_x_1.adjoint() * this->signal_subvector_x_2))(0));
-    phase_y = std::arg(((this->signal_subvector_y_1.adjoint() * this->signal_subvector_y_1).inverse()
-                        * (this->signal_subvector_y_1.adjoint() * this->signal_subvector_y_2))(0));
+    phase_x = std::arg(((this->signal_subarray_x_1.adjoint() * this->signal_subarray_x_1).inverse()
+                        * (this->signal_subarray_x_1.adjoint() * this->signal_subarray_x_2))(0));
+    phase_y = std::arg(((this->signal_subarray_y_1.adjoint() * this->signal_subarray_y_1).inverse()
+                        * (this->signal_subarray_y_1.adjoint() * this->signal_subarray_y_2))(0));
 
     result_angles.azimuth = std::atan2(phase_y, phase_x);
 
