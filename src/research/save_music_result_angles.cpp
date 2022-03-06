@@ -11,13 +11,13 @@
 void save_music_result_angles(std::string iq_file_name, std::string music_result_angles_file_name);
 
 int main() {
-    save_music_result_angles("close.txt", "close_fine.txt");
-    save_music_result_angles("office_walk.txt", "office_walk_fine.txt");
-    save_music_result_angles("fixed_1.txt", "fixed_1_fine.txt");
-    save_music_result_angles("fixed_2.txt", "fixed_2_fine.txt");
-    save_music_result_angles("fixed_3.txt", "fixed_3_fine.txt");
-    save_music_result_angles("fixed_4.txt", "fixed_4_fine.txt");
-    save_music_result_angles("fixed_5.txt", "fixed_5_fine.txt");
+    save_music_result_angles("close.txt", "close.txt");
+    save_music_result_angles("office_walk.txt", "office_walk.txt");
+    save_music_result_angles("fixed_1.txt", "fixed_1.txt");
+    save_music_result_angles("fixed_2.txt", "fixed_2.txt");
+    save_music_result_angles("fixed_3.txt", "fixed_3.txt");
+    save_music_result_angles("fixed_4.txt", "fixed_4.txt");
+    save_music_result_angles("fixed_5.txt", "fixed_5.txt");
     return 0;
 }
 

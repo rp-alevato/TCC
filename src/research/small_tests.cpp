@@ -1,5 +1,7 @@
 #include "doa/estimator.h"
 #include "misc/read_data_files.h"
+#include "misc/statistics.h"
+#include "misc/utility.h"
 
 #include <Eigen/Dense>
 #include <chrono>
@@ -28,9 +30,9 @@ int main() {
     angles = estimator.process_samples(samples_data[sample_ind], DoaTechnique::esprit);
     std::cout << angles.azimuth * 180 / M_PI << ", " << angles.elevation * 180 / M_PI << "\n";
     std::cout << music_results[sample_ind].azimuth * 180 / M_PI << ", " << music_results[sample_ind].elevation * 180 / M_PI << "\n";
-    //     if (estimator.iterations > 500) {
-    //         std::cout << "sample_index: " << sample_ind << "\n";
-    //     }
+    // if (estimator.iterations > 500) {
+    //     std::cout << "sample_index: " << sample_ind << "\n";
+    // }
     // }
     return 0;
 }

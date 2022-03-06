@@ -14,7 +14,7 @@ void music_save_spectrum(SamplesData& samples_data, double grid_step, std::strin
 int main() {
     std::vector<SamplesData> samples_data_list;
     read_files::get_iq_samples(samples_data_list, "data/iq_samples/close.txt");
-    music_save_spectrum(samples_data_list[9705], M_PI / 180, "close_sample_9705.csv");
+    music_save_spectrum(samples_data_list[1000], M_PI / 180, "close_sample_1000.csv");
     // music_save_spectrum(samples_data_list[0], M_PI / 180, "close_sample_0000.csv");
     // music_save_spectrum(samples_data_list[21], M_PI / 180, "close_sample_0021.csv");
     // music_save_spectrum(samples_data_list[29], M_PI / 180, "close_sample_0029.csv");
