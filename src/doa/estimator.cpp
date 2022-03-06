@@ -149,7 +149,7 @@ DoaAngles DoaEstimator::music_simple_grid_search(const double grid_step) {
     return result_angles;
 }
 
-DoaAngles DoaEstimator::music_coarse_grid_search(const double finer_step, const double coarse_step,
+DoaAngles DoaEstimator::music_coarse_grid_search(const double fine_step, const double coarse_step,
                                                  MusicOptimization optimization, GradientSpecs gradient_specs) {
     int azimuth_max_steps = (int)(2 * M_PI / coarse_step);
     int elevation_max_steps = (int)((M_PI / 2) / coarse_step);
@@ -172,8 +172,8 @@ DoaAngles DoaEstimator::music_coarse_grid_search(const double finer_step, const 
     }
 
     switch (optimization) {
-        case MusicOptimization::finer_grid_search:
-            return music_finer_grid_search(coarse_angles, finer_step, coarse_step);
+        case MusicOptimization::fine_grid_search:
+            return music_fine_grid_search(coarse_angles, fine_step, coarse_step);
             break;
         case MusicOptimization::gradient_simple:
             return music_gradient_simple(coarse_angles, gradient_specs);
@@ -197,22 +197,22 @@ DoaAngles DoaEstimator::music_coarse_grid_search(const double finer_step, const 
 // ****************************************************************************
 // *************************  OPTIMIZATION ALGORITHMS *************************
 // ****************************************************************************
-DoaAngles DoaEstimator::music_finer_grid_search(const DoaAngles coarse_angles,
-                                                const double finer_step,
-                                                double coarse_step) {
+DoaAngles DoaEstimator::music_fine_grid_search(const DoaAngles coarse_angles,
+                                               const double fine_step,
+                                               double coarse_step) {
     coarse_step += std::abs(std::remainder((M_PI / 2), coarse_step));
-    coarse_step += finer_step;
-    int azimuth_init_steps = (int)((coarse_angles.azimuth - coarse_step) / finer_step);
-    int elevation_init_steps = (int)((coarse_angles.elevation - coarse_step) / finer_step);
-    int azimuth_max_steps = (int)((coarse_angles.azimuth + coarse_step) / finer_step);
-    int elevation_max_steps = (int)((coarse_angles.elevation + coarse_step) / finer_step);
+    coarse_step += fine_step;
+    int azimuth_init_steps = (int)((coarse_angles.azimuth - coarse_step) / fine_step);
+    int elevation_init_steps = (int)((coarse_angles.elevation - coarse_step) / fine_step);
+    int azimuth_max_steps = (int)((coarse_angles.azimuth + coarse_step) / fine_step);
+    int elevation_max_steps = (int)((coarse_angles.elevation + coarse_step) / fine_step);
     DoaAngles result_angles = {0, 0};
     double maximum_result = 0;
 
     for (int azimuth_index = azimuth_init_steps; azimuth_index <= azimuth_max_steps; azimuth_index++) {
-        double azimuth = azimuth_index * finer_step;
+        double azimuth = azimuth_index * fine_step;
         for (int elevation_index = elevation_init_steps; elevation_index <= elevation_max_steps; elevation_index++) {
-            double elevation = elevation_index * finer_step;
+            double elevation = elevation_index * fine_step;
             double result = this->estimate_music_result({azimuth, elevation});
             if (result > maximum_result) {
                 maximum_result = result;

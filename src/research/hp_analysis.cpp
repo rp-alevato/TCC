@@ -12,10 +12,10 @@
 #include <thread>
 #include <vector>
 
-// Equation for best runtime coarse_step based on finer_step (desired precision):
-// min(((360/coarse)^2)/4 + (2*coarse/finer)^2) for a fixed finer
+// Equation for best runtime coarse_step based on fine_step (desired precision):
+// min(((360/coarse)^2)/4 + (2*coarse/fine)^2) for a fixed fine
 // to minimize, differentiate and equal to 0
-// this equals to coarse = ((360^2 * finer^2) / 16)^(1/4)
+// this equals to coarse = ((360^2 * fine^2) / 16)^(1/4)
 
 const std::string iq_samples_dir = "data/iq_samples/";
 const std::string music_results_dir = "data/music_result_angles/";
@@ -24,12 +24,12 @@ const std::string walk_filename = "office_walk.txt";
 const std::string output_dir = "data/experimental_results/hyperparameters/";
 
 static constexpr std::size_t training_stride = 5;
-static constexpr double finer_step = M_PI / 1800;
+static constexpr double fine_step = M_PI / 1800;
 
 // Finer grid functions
-void complete_finer_grid_analysis();
-void finer_grid_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                         const std::vector<DoaAngles>& correct_results_vector);
+void complete_fine_grid_analysis();
+void fine_grid_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
+                        const std::vector<DoaAngles>& correct_results_vector);
 //  Gradient simple functions
 void complete_gradient_simple_analysis();
 void gradient_simple_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
@@ -58,7 +58,7 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
                                     const double learning_rate, const double momentum);
 
 int main() {
-    complete_finer_grid_analysis();
+    complete_fine_grid_analysis();
     complete_gradient_simple_analysis();
     complete_gradient_adapt_lr_analysis();
     complete_gradient_momentum_analysis();
@@ -66,7 +66,7 @@ int main() {
     return 0;
 }
 
-void complete_finer_grid_analysis() {
+void complete_fine_grid_analysis() {
     std::vector<SamplesData> training_samples_close, training_samples_walk, training_samples_both;
     std::vector<DoaAngles> training_results_close, training_results_walk, training_results_both;
 
@@ -75,11 +75,11 @@ void complete_finer_grid_analysis() {
                       training_samples_both, training_results_both);
 
     std::cout << "Finer grid analysis: close.txt:\n";
-    finer_grid_analysis("finer_grid_close.csv", training_samples_close, training_results_close);
+    fine_grid_analysis("fine_grid_close.csv", training_samples_close, training_results_close);
     std::cout << "Finer grid analysis: walk.txt:\n";
-    finer_grid_analysis("finer_grid_walk.csv", training_samples_walk, training_results_walk);
+    fine_grid_analysis("fine_grid_walk.csv", training_samples_walk, training_results_walk);
     std::cout << "Finer grid analysis: both:\n";
-    finer_grid_analysis("finer_grid_both.csv", training_samples_both, training_results_both);
+    fine_grid_analysis("fine_grid_both.csv", training_samples_both, training_results_both);
 
     return;
 }
@@ -156,8 +156,8 @@ void complete_gradient_nesterov_analysis() {
     return;
 }
 
-void finer_grid_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                         const std::vector<DoaAngles>& correct_results_vector) {
+void fine_grid_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
+                        const std::vector<DoaAngles>& correct_results_vector) {
     std::ofstream output_csv;
     DoaEstimator estimator;
     std::vector<double> coarse_steps;
@@ -175,15 +175,15 @@ void finer_grid_analysis(const std::string output_filename, const std::vector<Sa
         coarse_steps.push_back(i);
     }
 
-    make_csv_columns(output_csv, "finer_grid");
+    make_csv_columns(output_csv, "fine_grid");
 
     std::cout << "Total number of coarse_steps: " << coarse_steps.size() << "\n";
 
     for (std::size_t coarse_index = 0; coarse_index < coarse_steps.size(); coarse_index++) {
         double coarse_step = coarse_steps[coarse_index];
         std::cout << "cs: " << std::setw(2) << coarse_step << "\n";
-        save_csv_info_for_every_sample(output_csv, "finer_grid", samples_data,
-                                       correct_results_vector, MusicOptimization::finer_grid_search,
+        save_csv_info_for_every_sample(output_csv, "fine_grid", samples_data,
+                                       correct_results_vector, MusicOptimization::fine_grid_search,
                                        coarse_step, 0, 0);
     }
 
@@ -443,7 +443,7 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
     auto t1 = std::chrono::high_resolution_clock::now();
     for (std::size_t sample_index = 0; sample_index < samples_data.size(); sample_index++) {
         results.push_back(estimator.process_samples(samples_data[sample_index], DoaTechnique::music,
-                                                    MusicSearch::coarse_grid, finer_step,
+                                                    MusicSearch::coarse_grid, fine_step,
                                                     optimization, coarse_step_pi, gradient_specs));
     }
     auto t2 = std::chrono::high_resolution_clock::now();

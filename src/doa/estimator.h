@@ -54,7 +54,7 @@ enum class MusicSearch {
 };
 
 enum class MusicOptimization {
-    finer_grid_search,
+    fine_grid_search,
     gradient_simple,
     gradient_adapt_lr,
     gradient_momentum,
@@ -122,9 +122,9 @@ class DoaEstimator {
     // double estimate_music_result(DoaAngles in_angles);
     // Music search algorithms
     DoaAngles music_simple_grid_search(const double grid_step);
-    DoaAngles music_coarse_grid_search(const double finer_step, const double coarse_step, const MusicOptimization optimization, const GradientSpecs gradient_specs);
+    DoaAngles music_coarse_grid_search(const double fine_step, const double coarse_step, const MusicOptimization optimization, const GradientSpecs gradient_specs);
     // MusicOptimization algorithms
-    DoaAngles music_finer_grid_search(const DoaAngles coarse_angles, const double finer_step, double coarse_step);
+    DoaAngles music_fine_grid_search(const DoaAngles coarse_angles, const double fine_step, double coarse_step);
     DoaAngles music_gradient_simple(const DoaAngles coarse_angles, const GradientSpecs gradient_specs);
     DoaAngles music_gradient_simple_adapt_lr(const DoaAngles coarse_angles, const GradientSpecs gradient_specs);
     DoaAngles music_gradient_momentum(const DoaAngles coarse_angles, const GradientSpecs gradient_specs);
