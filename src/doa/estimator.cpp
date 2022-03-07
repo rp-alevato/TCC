@@ -243,10 +243,10 @@ DoaAngles DoaEstimator::music_gradient_simple(const DoaAngles coarse_angles, con
         gradient_elevation = this->estimate_music_result({result_angles.azimuth, result_angles.elevation + diff_step});
         gradient_elevation = (gradient_elevation - curr_music_result) / diff_step;
 
-        double azimuth_step = learning_rate * gradient_azimuth;
-        double elevation_step = learning_rate * gradient_elevation;
-        result_angles.azimuth += azimuth_step;
-        result_angles.elevation += elevation_step;
+        double step_azimuth = learning_rate * gradient_azimuth;
+        double step_elevation = learning_rate * gradient_elevation;
+        result_angles.azimuth += step_azimuth;
+        result_angles.elevation += step_elevation;
 
         continue_azimuth = std::abs(gradient_azimuth) > threshold;
         continue_elevation = std::abs(gradient_elevation) > threshold;
@@ -288,10 +288,10 @@ DoaAngles DoaEstimator::music_gradient_simple_adapt_lr(const DoaAngles coarse_an
             learning_rate *= 0.5;
         }
 
-        double azimuth_step = learning_rate * gradient_azimuth;
-        double elevation_step = learning_rate * gradient_elevation;
-        result_angles.azimuth += azimuth_step;
-        result_angles.elevation += elevation_step;
+        double step_azimuth = learning_rate * gradient_azimuth;
+        double step_elevation = learning_rate * gradient_elevation;
+        result_angles.azimuth += step_azimuth;
+        result_angles.elevation += step_elevation;
         prev_gradient_azimuth = gradient_azimuth;
         prev_gradient_elevation = gradient_elevation;
 
@@ -300,7 +300,7 @@ DoaAngles DoaEstimator::music_gradient_simple_adapt_lr(const DoaAngles coarse_an
 
         // std::cout << "it: " << iterations << "\n";
         // std::cout << "gr: " << gradient_azimuth << ", " << gradient_elevation << "\n";
-        // std::cout << "st: " << azimuth_step << ", " << elevation_step << "\n";
+        // std::cout << "st: " << step_azimuth << ", " << step_elevation << "\n";
         // std::cout << "rs: " << result_angles.azimuth << ", " << result_angles.elevation << "\n";
     } while ((continue_azimuth || continue_elevation)
              && (iterations < this->max_iterations));
@@ -317,8 +317,8 @@ DoaAngles DoaEstimator::music_gradient_momentum(const DoaAngles coarse_angles, c
     double threshold = gradient_specs.threshold;
     double diff_step = gradient_specs.diff_step;
     double momentum = gradient_specs.momentum;
-    bool continue_azimuth = true;
-    bool continue_elevation = true;
+    bool continue_azimuth = false;
+    bool continue_elevation = false;
     DoaAngles result_angles = coarse_angles;
     double prev_step_azimuth = 0;
     double prev_step_elevation = 0;
@@ -334,19 +334,19 @@ DoaAngles DoaEstimator::music_gradient_momentum(const DoaAngles coarse_angles, c
         gradient_elevation = this->estimate_music_result({result_angles.azimuth, result_angles.elevation + diff_step});
         gradient_elevation = (gradient_elevation - curr_music_result) / diff_step;
 
-        double azimuth_step = momentum * prev_step_azimuth + learning_rate * gradient_azimuth;
-        double elevation_step = momentum * prev_step_elevation + learning_rate * gradient_elevation;
-        result_angles.azimuth += azimuth_step;
-        result_angles.elevation += elevation_step;
-        prev_step_azimuth = azimuth_step;
-        prev_step_elevation = elevation_step;
+        double step_azimuth = momentum * prev_step_azimuth + learning_rate * gradient_azimuth;
+        double step_elevation = momentum * prev_step_elevation + learning_rate * gradient_elevation;
+        result_angles.azimuth += step_azimuth;
+        result_angles.elevation += step_elevation;
+        prev_step_azimuth = step_azimuth;
+        prev_step_elevation = step_elevation;
 
         continue_azimuth = std::abs(gradient_azimuth) > threshold;
         continue_elevation = std::abs(gradient_elevation) > threshold;
 
         // std::cout << "it: " << iterations << "\n";
         // std::cout << "gr: " << gradient_azimuth << ", " << gradient_elevation << "\n";
-        // std::cout << "st: " << azimuth_step << ", " << elevation_step << "\n";
+        // std::cout << "st: " << step_azimuth << ", " << step_elevation << "\n";
         // std::cout << "rs: " << result_angles.azimuth << ", " << result_angles.elevation << "\n";
     } while ((continue_azimuth || continue_elevation)
              && (iterations < this->max_iterations));
@@ -382,19 +382,19 @@ DoaAngles DoaEstimator::music_gradient_nesterov(const DoaAngles coarse_angles, c
         gradient_elevation = this->estimate_music_result({future_angles.azimuth, future_angles.elevation + diff_step});
         gradient_elevation = (gradient_elevation - curr_music_result) / diff_step;
 
-        double azimuth_step = momentum * prev_step_azimuth + learning_rate * gradient_azimuth;
-        double elevation_step = momentum * prev_step_elevation + learning_rate * gradient_elevation;
-        result_angles.azimuth += azimuth_step;
-        result_angles.elevation += elevation_step;
-        prev_step_azimuth = azimuth_step;
-        prev_step_elevation = elevation_step;
+        double step_azimuth = momentum * prev_step_azimuth + learning_rate * gradient_azimuth;
+        double step_elevation = momentum * prev_step_elevation + learning_rate * gradient_elevation;
+        result_angles.azimuth += step_azimuth;
+        result_angles.elevation += step_elevation;
+        prev_step_azimuth = step_azimuth;
+        prev_step_elevation = step_elevation;
 
         continue_azimuth = std::abs(gradient_azimuth) > threshold;
         continue_elevation = std::abs(gradient_elevation) > threshold;
 
         // std::cout << "it: " << iterations << "\n";
         // std::cout << "gr: " << gradient_azimuth << ", " << gradient_elevation << "\n";
-        // std::cout << "st: " << azimuth_step << ", " << elevation_step << "\n";
+        // std::cout << "st: " << step_azimuth << ", " << step_elevation << "\n";
         // std::cout << "rs: " << result_angles.azimuth << ", " << result_angles.elevation << "\n";
     } while ((continue_azimuth || continue_elevation)
              && (iterations < this->max_iterations));
