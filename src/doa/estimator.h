@@ -78,7 +78,7 @@ class DoaEstimator {
                               const double grid_step = 2 * M_PI / 720,
                               const MusicOptimization optimization = MusicOptimization::gradient_simple,
                               const double coarse_step = 2 * M_PI / 60,
-                              const GradientSpecs gradient_specs = {1e-5, 1e-8, 0.5, 0.95});
+                              const GradientSpecs gradient_specs = {1e-5, 1.5e-8, 0.5, 0.95});
 
   private:
     bool was_max_iterations;  // Research purposes

@@ -22,7 +22,7 @@ void calc_save_output(const std::string& technique, std::ofstream& output_csv, s
                       std::vector<double>& results_az, std::vector<double>& results_el);
 
 int main() {
-    for (int i = 1; i <= 5; i++) {
+    for (int i = 1; i <= 3; i++) {
         precision_analysis(fixed_filename(i));
     }
 

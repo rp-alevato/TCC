@@ -130,8 +130,8 @@ double DoaEstimator::estimate_music_result(const DoaAngles angles) {
 // *************************  MUSIC SEARCH ALGORITHMS *************************
 // ****************************************************************************
 DoaAngles DoaEstimator::music_simple_grid_search(const double grid_step) {
-    int azimuth_max_steps = (int)(2 * M_PI / grid_step);
-    int elevation_max_steps = (int)((M_PI / 2) / grid_step);
+    int azimuth_max_steps = std::floor(2 * M_PI / grid_step);
+    int elevation_max_steps = std::floor((M_PI / 2) / grid_step);
     DoaAngles result_angles = {0, 0};
     double maximum_result = 0;
 
@@ -151,8 +151,8 @@ DoaAngles DoaEstimator::music_simple_grid_search(const double grid_step) {
 
 DoaAngles DoaEstimator::music_coarse_grid_search(const double fine_step, const double coarse_step,
                                                  MusicOptimization optimization, GradientSpecs gradient_specs) {
-    int azimuth_max_steps = (int)(2 * M_PI / coarse_step);
-    int elevation_max_steps = (int)((M_PI / 2) / coarse_step);
+    int azimuth_max_steps = std::ceil(2 * M_PI / coarse_step);
+    int elevation_max_steps = std::ceil((M_PI / 2) / coarse_step);
     DoaAngles coarse_angles = {0, 0};
     double maximum_result = 0;
 
@@ -200,7 +200,6 @@ DoaAngles DoaEstimator::music_coarse_grid_search(const double fine_step, const d
 DoaAngles DoaEstimator::music_fine_grid_search(const DoaAngles coarse_angles,
                                                const double fine_step,
                                                double coarse_step) {
-    coarse_step += std::abs(std::remainder((M_PI / 2), coarse_step));
     coarse_step += fine_step;
     int azimuth_init_steps = (int)((coarse_angles.azimuth - coarse_step) / fine_step);
     int elevation_init_steps = (int)((coarse_angles.elevation - coarse_step) / fine_step);

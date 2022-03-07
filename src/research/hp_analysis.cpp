@@ -268,7 +268,7 @@ void gradient_adapt_lr_analysis(const std::string output_filename, const std::ve
     for (double i = 0.01; i <= 0.091; i += 0.02) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.095; i <= 0.451; i += 0.05) {
+    for (double i = 0.095; i <= 0.451; i += 0.1) {
         learning_rates.push_back(i);
     }
     for (double i = 0.5; i <= 0.91; i += 0.2) {
@@ -319,7 +319,7 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
     for (double i = 0.005; i <= 0.0091; i += 0.002) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.01; i <= 0.041; i += 0.005) {
+    for (double i = 0.01; i <= 0.041; i += 0.01) {
         learning_rates.push_back(i);
     }
     for (double i = 0.05; i <= 0.091; i += 0.02) {
@@ -382,7 +382,7 @@ void gradient_nesterov_analysis(const std::string output_filename, const std::ve
     for (double i = 0.005; i <= 0.0091; i += 0.002) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.01; i <= 0.0401; i += 0.005) {
+    for (double i = 0.01; i <= 0.0401; i += 0.01) {
         learning_rates.push_back(i);
     }
     for (double i = 0.05; i <= 0.091; i += 0.02) {
@@ -436,7 +436,7 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
     std::vector<double> errors_len, errors_az, errors_el;
     std::vector<DoaAngles> results;
     DoaEstimator estimator;
-    GradientSpecs gradient_specs = {1e-5, 1e-8, learning_rate, momentum};
+    GradientSpecs gradient_specs = {1e-5, 1.5e-8, learning_rate, momentum};
     double coarse_step_pi = utility::angle_to_pi(coarse_step);
 
     // Estimate angles
