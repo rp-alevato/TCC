@@ -12,11 +12,6 @@
 #include <thread>
 #include <vector>
 
-// Equation for best runtime coarse_step based on fine_step (desired precision):
-// min(((360/coarse)^2)/4 + (2*coarse/fine)^2) for a fixed fine
-// to minimize, differentiate and equal to 0
-// this equals to coarse = ((360^2 * fine^2) / 16)^(1/4)
-
 const std::string iq_samples_dir = "data/iq_samples/";
 const std::string music_results_dir = "data/music_result_angles/";
 const std::string close_filename = "close.txt";
@@ -59,10 +54,10 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
 
 int main() {
     complete_fine_grid_analysis();
-    complete_gradient_simple_analysis();
-    complete_gradient_adapt_lr_analysis();
-    complete_gradient_momentum_analysis();
-    complete_gradient_nesterov_analysis();
+    // complete_gradient_simple_analysis();
+    // complete_gradient_adapt_lr_analysis();
+    // complete_gradient_momentum_analysis();
+    // complete_gradient_nesterov_analysis();
     return 0;
 }
 
@@ -76,10 +71,10 @@ void complete_fine_grid_analysis() {
 
     std::cout << "Finer grid analysis: close.txt:\n";
     fine_grid_analysis("fine_grid_close.csv", training_samples_close, training_results_close);
-    std::cout << "Finer grid analysis: walk.txt:\n";
-    fine_grid_analysis("fine_grid_walk.csv", training_samples_walk, training_results_walk);
-    std::cout << "Finer grid analysis: both:\n";
-    fine_grid_analysis("fine_grid_both.csv", training_samples_both, training_results_both);
+    // std::cout << "Finer grid analysis: walk.txt:\n";
+    // fine_grid_analysis("fine_grid_walk.csv", training_samples_walk, training_results_walk);
+    // std::cout << "Finer grid analysis: both:\n";
+    // fine_grid_analysis("fine_grid_both.csv", training_samples_both, training_results_both);
 
     return;
 }
@@ -112,10 +107,10 @@ void complete_gradient_adapt_lr_analysis() {
 
     std::cout << "Gradient adapt lr analysis: close.txt:\n";
     gradient_adapt_lr_analysis("gradient_adapt_lr_close.csv", training_samples_close, training_results_close);
-    std::cout << "Gradient adapt lr analysis: walk.txt:\n";
-    gradient_adapt_lr_analysis("gradient_adapt_lr_walk.csv", training_samples_walk, training_results_walk);
-    std::cout << "Gradient adapt lr analysis: both:\n";
-    gradient_adapt_lr_analysis("gradient_adapt_lr_both.csv", training_samples_both, training_results_both);
+    // std::cout << "Gradient adapt lr analysis: walk.txt:\n";
+    // gradient_adapt_lr_analysis("gradient_adapt_lr_walk.csv", training_samples_walk, training_results_walk);
+    // std::cout << "Gradient adapt lr analysis: both:\n";
+    // gradient_adapt_lr_analysis("gradient_adapt_lr_both.csv", training_samples_both, training_results_both);
 
     return;
 }
@@ -130,10 +125,10 @@ void complete_gradient_momentum_analysis() {
 
     std::cout << "Gradient momentum analysis: close.txt:\n";
     gradient_momentum_analysis("gradient_momentum_close.csv", training_samples_close, training_results_close);
-    std::cout << "Gradient momentum analysis: walk.txt:\n";
-    gradient_momentum_analysis("gradient_momentum_walk.csv", training_samples_walk, training_results_walk);
-    std::cout << "Gradient momentum analysis: both:\n";
-    gradient_momentum_analysis("gradient_momentum_both.csv", training_samples_both, training_results_both);
+    // std::cout << "Gradient momentum analysis: walk.txt:\n";
+    // gradient_momentum_analysis("gradient_momentum_walk.csv", training_samples_walk, training_results_walk);
+    // std::cout << "Gradient momentum analysis: both:\n";
+    // gradient_momentum_analysis("gradient_momentum_both.csv", training_samples_both, training_results_both);
 
     return;
 }
@@ -146,12 +141,12 @@ void complete_gradient_nesterov_analysis() {
                       training_samples_walk, training_results_walk,
                       training_samples_both, training_results_both);
 
-    std::cout << "Gradient nesterov analysis: close.txt:\n";
-    gradient_nesterov_analysis("gradient_nesterov_close.csv", training_samples_close, training_results_close);
-    std::cout << "Gradient nesterov analysis: walk.txt:\n";
-    gradient_nesterov_analysis("gradient_nesterov_walk.csv", training_samples_walk, training_results_walk);
-    std::cout << "Gradient nesterov analysis: both:\n";
-    gradient_nesterov_analysis("gradient_nesterov_both.csv", training_samples_both, training_results_both);
+    std::cout << "Gradient momentum adapt lr analysis: close.txt:\n";
+    gradient_nesterov_analysis("gradient_momentum_adapt_lr_close.csv", training_samples_close, training_results_close);
+    // std::cout << "Gradient nesterov analysis: walk.txt:\n";
+    // gradient_nesterov_analysis("gradient_nesterov_walk.csv", training_samples_walk, training_results_walk);
+    // std::cout << "Gradient nesterov analysis: both:\n";
+    // gradient_nesterov_analysis("gradient_nesterov_both.csv", training_samples_both, training_results_both);
 
     return;
 }
@@ -211,9 +206,6 @@ void gradient_simple_analysis(const std::string output_filename, const std::vect
         coarse_steps.push_back(i);
     }
 
-    for (double i = 0.007; i <= 0.0091; i += 0.002) {
-        learning_rates.push_back(i);
-    }
     for (double i = 0.01; i <= 0.041; i += 0.005) {
         learning_rates.push_back(i);
     }
@@ -316,9 +308,6 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
         coarse_steps.push_back(i);
     }
 
-    for (double i = 0.005; i <= 0.0091; i += 0.002) {
-        learning_rates.push_back(i);
-    }
     for (double i = 0.01; i <= 0.041; i += 0.01) {
         learning_rates.push_back(i);
     }
@@ -379,9 +368,6 @@ void gradient_nesterov_analysis(const std::string output_filename, const std::ve
         coarse_steps.push_back(i);
     }
 
-    for (double i = 0.005; i <= 0.0091; i += 0.002) {
-        learning_rates.push_back(i);
-    }
     for (double i = 0.01; i <= 0.0401; i += 0.01) {
         learning_rates.push_back(i);
     }
@@ -585,4 +571,5 @@ void make_csv_columns(std::ofstream& output_csv, const std::string analysis_meth
                << "mae_len,rmse_len,mae_len_99p,rmse_len_99p,mae_len_1p,rmse_len_1p,"
                << "mae_az,rmse_az,mae_az_99p,rmse_az_99p,mae_az_1p,rmse_az_1p,"
                << "mae_el,rmse_el,mae_el_99p,rmse_el_99p,mae_el_1p,rmse_el_1p\n";
+    return;
 }
