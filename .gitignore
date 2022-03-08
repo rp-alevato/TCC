@@ -3,3 +3,5 @@
 build/
 .ipynb_checkpoints
 *.exe
+*.png
+data/backup_experimental_results/
