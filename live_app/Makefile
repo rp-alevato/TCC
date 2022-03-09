@@ -202,7 +202,7 @@ src/gecko_bglib.cpp \
 src/main.cpp \
 src/bg.cpp \
 src/aox.cpp \
-../src/aoa/estimator.cpp
+../src/doa/estimator.cpp
 
 # this file should be the last added
 C_SRC += src/uart_posix.cpp
