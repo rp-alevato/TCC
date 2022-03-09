@@ -14,7 +14,6 @@
 
 const std::string iq_samples_dir = "data/iq_samples/";
 const std::string music_results_dir = "data/music_result_angles/";
-const std::string close_filename = "close.txt";
 const std::string walk_filename = "office_walk.txt";
 const std::string output_dir = "data/experimental_results/hyperparameters/";
 
