@@ -12,10 +12,6 @@
 #include <string>
 #include <vector>
 
-// Step 1: Load all samples and music results
-// Step 2: Get all results for ESPRIT and Silabs API
-// Step 3: Calculate parameters
-
 std::string fixed_filename(unsigned int i);
 void precision_analysis(const std::string& filename);
 void calc_save_output(const std::string& technique, std::ofstream& output_csv, std::vector<double>& results_len,

@@ -46,8 +46,8 @@ int main() {
 
     get_training_data(training_samples, training_results);
 
-    // std::cout << "Coarse-fine search analysis:\n";
-    // coarse_fine_search_analysis("coarse_fine_search.csv", training_samples, training_results);
+    std::cout << "Coarse-fine search analysis:\n";
+    coarse_fine_search_analysis("coarse_fine_search.csv", training_samples, training_results);
 
     std::cout << "Gradient simple analysis:\n";
     gradient_simple_analysis("gradient_simple.csv", training_samples, training_results);
@@ -55,11 +55,11 @@ int main() {
     std::cout << "Gradient adapt lr analysis:\n";
     gradient_adapt_lr_analysis("gradient_adapt_lr.csv", training_samples, training_results);
 
-    // std::cout << "Gradient momentum analysis:\n";
-    // gradient_momentum_analysis("gradient_momentum.csv", training_samples, training_results);
+    std::cout << "Gradient momentum analysis:\n";
+    gradient_momentum_analysis("gradient_momentum.csv", training_samples, training_results);
 
-    // std::cout << "Gradient nesterov analysis:\n";
-    // gradient_nesterov_analysis("gradient_nesterov.csv", training_samples, training_results);
+    std::cout << "Gradient nesterov analysis:\n";
+    gradient_nesterov_analysis("gradient_nesterov.csv", training_samples, training_results);
 
     return 0;
 }
