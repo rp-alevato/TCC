@@ -58,7 +58,7 @@ int main() {
 
     technique = "music_gradient_simple";
     coarse_step = 5;
-    gradient_specs = {1e-5, 1.5e-8, 0.1, 0};
+    gradient_specs = {1e-5, 1.5e-8, 0.09, 0};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_adapt_lr";
