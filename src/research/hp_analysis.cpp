@@ -19,140 +19,53 @@ const std::string walk_filename = "office_walk.txt";
 const std::string output_dir = "data/experimental_results/hyperparameters/";
 
 static constexpr std::size_t training_stride = 5;
-static constexpr double fine_step = M_PI / 1800;
+static constexpr double fine_step = M_PI / 900;
 
-// Finer grid functions
-void complete_fine_grid_analysis();
-void fine_grid_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                        const std::vector<DoaAngles>& correct_results_vector);
-//  Gradient simple functions
-void complete_gradient_simple_analysis();
+void coarse_fine_search_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
+                                 const std::vector<DoaAngles>& correct_results);
 void gradient_simple_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                              const std::vector<DoaAngles>& correct_results_vector);
-//  Gradient simple adapt lr functions
-void complete_gradient_adapt_lr_analysis();
+                              const std::vector<DoaAngles>& correct_results);
 void gradient_adapt_lr_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                                const std::vector<DoaAngles>& correct_results_vector);
-//  Gradient momentum functions
-void complete_gradient_momentum_analysis();
+                                const std::vector<DoaAngles>& correct_results);
 void gradient_momentum_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                                const std::vector<DoaAngles>& correct_results_vector);
-//  Gradient nesterov functions
-void complete_gradient_nesterov_analysis();
+                                const std::vector<DoaAngles>& correct_results);
 void gradient_nesterov_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                                const std::vector<DoaAngles>& correct_results_vector);
+                                const std::vector<DoaAngles>& correct_results);
 // Utility functions
-void get_training_data(std::vector<SamplesData>& training_samples_close, std::vector<DoaAngles>& training_results_close,
-                       std::vector<SamplesData>& training_samples_walk, std::vector<DoaAngles>& training_results_walk,
-                       std::vector<SamplesData>& training_samples_both, std::vector<DoaAngles>& training_results_both);
+void get_training_data(std::vector<SamplesData>& training_samples, std::vector<DoaAngles>& training_results);
 void make_csv_columns(std::ofstream& output_csv, const std::string analysis_method);
 void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string analysis_method,
                                     const std::vector<SamplesData>& samples_data,
-                                    const std::vector<DoaAngles>& correct_results_vector,
+                                    const std::vector<DoaAngles>& correct_results,
                                     const MusicOptimization optimization, const double coarse_step,
                                     const double learning_rate, const double momentum);
 
 int main() {
-    complete_fine_grid_analysis();
-    // complete_gradient_simple_analysis();
-    // complete_gradient_adapt_lr_analysis();
-    // complete_gradient_momentum_analysis();
-    // complete_gradient_nesterov_analysis();
+    std::vector<SamplesData> training_samples;
+    std::vector<DoaAngles> training_results;
+
+    get_training_data(training_samples, training_results);
+
+    // std::cout << "Coarse-fine search analysis:\n";
+    // coarse_fine_search_analysis("coarse_fine_search.csv", training_samples, training_results);
+
+    std::cout << "Gradient simple analysis:\n";
+    gradient_simple_analysis("gradient_simple.csv", training_samples, training_results);
+
+    std::cout << "Gradient adapt lr analysis:\n";
+    gradient_adapt_lr_analysis("gradient_adapt_lr.csv", training_samples, training_results);
+
+    // std::cout << "Gradient momentum analysis:\n";
+    // gradient_momentum_analysis("gradient_momentum.csv", training_samples, training_results);
+
+    // std::cout << "Gradient nesterov analysis:\n";
+    // gradient_nesterov_analysis("gradient_nesterov.csv", training_samples, training_results);
+
     return 0;
 }
 
-void complete_fine_grid_analysis() {
-    std::vector<SamplesData> training_samples_close, training_samples_walk, training_samples_both;
-    std::vector<DoaAngles> training_results_close, training_results_walk, training_results_both;
-
-    get_training_data(training_samples_close, training_results_close,
-                      training_samples_walk, training_results_walk,
-                      training_samples_both, training_results_both);
-
-    std::cout << "Finer grid analysis: close.txt:\n";
-    fine_grid_analysis("fine_grid_close.csv", training_samples_close, training_results_close);
-    // std::cout << "Finer grid analysis: walk.txt:\n";
-    // fine_grid_analysis("fine_grid_walk.csv", training_samples_walk, training_results_walk);
-    // std::cout << "Finer grid analysis: both:\n";
-    // fine_grid_analysis("fine_grid_both.csv", training_samples_both, training_results_both);
-
-    return;
-}
-
-void complete_gradient_simple_analysis() {
-    std::vector<SamplesData> training_samples_close, training_samples_walk, training_samples_both;
-    std::vector<DoaAngles> training_results_close, training_results_walk, training_results_both;
-
-    get_training_data(training_samples_close, training_results_close,
-                      training_samples_walk, training_results_walk,
-                      training_samples_both, training_results_both);
-
-    std::cout << "Gradient simple analysis: close.txt:\n";
-    gradient_simple_analysis("gradient_simple_close.csv", training_samples_close, training_results_close);
-    std::cout << "Gradient simple analysis: walk.txt:\n";
-    gradient_simple_analysis("gradient_simple_walk.csv", training_samples_walk, training_results_walk);
-    std::cout << "Gradient simple analysis: both:\n";
-    gradient_simple_analysis("gradient_simple_both.csv", training_samples_both, training_results_both);
-
-    return;
-}
-
-void complete_gradient_adapt_lr_analysis() {
-    std::vector<SamplesData> training_samples_close, training_samples_walk, training_samples_both;
-    std::vector<DoaAngles> training_results_close, training_results_walk, training_results_both;
-
-    get_training_data(training_samples_close, training_results_close,
-                      training_samples_walk, training_results_walk,
-                      training_samples_both, training_results_both);
-
-    std::cout << "Gradient adapt lr analysis: close.txt:\n";
-    gradient_adapt_lr_analysis("gradient_adapt_lr_close.csv", training_samples_close, training_results_close);
-    // std::cout << "Gradient adapt lr analysis: walk.txt:\n";
-    // gradient_adapt_lr_analysis("gradient_adapt_lr_walk.csv", training_samples_walk, training_results_walk);
-    // std::cout << "Gradient adapt lr analysis: both:\n";
-    // gradient_adapt_lr_analysis("gradient_adapt_lr_both.csv", training_samples_both, training_results_both);
-
-    return;
-}
-
-void complete_gradient_momentum_analysis() {
-    std::vector<SamplesData> training_samples_close, training_samples_walk, training_samples_both;
-    std::vector<DoaAngles> training_results_close, training_results_walk, training_results_both;
-
-    get_training_data(training_samples_close, training_results_close,
-                      training_samples_walk, training_results_walk,
-                      training_samples_both, training_results_both);
-
-    std::cout << "Gradient momentum analysis: close.txt:\n";
-    gradient_momentum_analysis("gradient_momentum_close.csv", training_samples_close, training_results_close);
-    // std::cout << "Gradient momentum analysis: walk.txt:\n";
-    // gradient_momentum_analysis("gradient_momentum_walk.csv", training_samples_walk, training_results_walk);
-    // std::cout << "Gradient momentum analysis: both:\n";
-    // gradient_momentum_analysis("gradient_momentum_both.csv", training_samples_both, training_results_both);
-
-    return;
-}
-
-void complete_gradient_nesterov_analysis() {
-    std::vector<SamplesData> training_samples_close, training_samples_walk, training_samples_both;
-    std::vector<DoaAngles> training_results_close, training_results_walk, training_results_both;
-
-    get_training_data(training_samples_close, training_results_close,
-                      training_samples_walk, training_results_walk,
-                      training_samples_both, training_results_both);
-
-    std::cout << "Gradient momentum adapt lr analysis: close.txt:\n";
-    gradient_nesterov_analysis("gradient_momentum_adapt_lr_close.csv", training_samples_close, training_results_close);
-    // std::cout << "Gradient nesterov analysis: walk.txt:\n";
-    // gradient_nesterov_analysis("gradient_nesterov_walk.csv", training_samples_walk, training_results_walk);
-    // std::cout << "Gradient nesterov analysis: both:\n";
-    // gradient_nesterov_analysis("gradient_nesterov_both.csv", training_samples_both, training_results_both);
-
-    return;
-}
-
-void fine_grid_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                        const std::vector<DoaAngles>& correct_results_vector) {
+void coarse_fine_search_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
+                                 const std::vector<DoaAngles>& correct_results) {
     std::ofstream output_csv;
     DoaEstimator estimator;
     std::vector<double> coarse_steps;
@@ -166,19 +79,19 @@ void fine_grid_analysis(const std::string output_filename, const std::vector<Sam
         throw std::runtime_error("Error opening file " + output_name);
     }
 
-    for (std::size_t i = 1; i <= 9; i++) {
+    for (std::size_t i = 2; i <= 9; i++) {
         coarse_steps.push_back(i);
     }
 
-    make_csv_columns(output_csv, "fine_grid");
+    make_csv_columns(output_csv, "coarse_fine_grid");
 
     std::cout << "Total number of coarse_steps: " << coarse_steps.size() << "\n";
 
     for (std::size_t coarse_index = 0; coarse_index < coarse_steps.size(); coarse_index++) {
         double coarse_step = coarse_steps[coarse_index];
         std::cout << "cs: " << std::setw(2) << coarse_step << "\n";
-        save_csv_info_for_every_sample(output_csv, "fine_grid", samples_data,
-                                       correct_results_vector, MusicOptimization::fine_grid_search,
+        save_csv_info_for_every_sample(output_csv, "coarse_fine_grid", samples_data,
+                                       correct_results, MusicOptimization::fine_grid_search,
                                        coarse_step, 0, 0);
     }
 
@@ -188,7 +101,7 @@ void fine_grid_analysis(const std::string output_filename, const std::vector<Sam
 }
 
 void gradient_simple_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                              const std::vector<DoaAngles>& correct_results_vector) {
+                              const std::vector<DoaAngles>& correct_results) {
     std::ofstream output_csv;
     DoaEstimator estimator;
     std::vector<double> coarse_steps, learning_rates;
@@ -202,17 +115,14 @@ void gradient_simple_analysis(const std::string output_filename, const std::vect
         throw std::runtime_error("Error opening file " + output_name);
     }
 
-    for (std::size_t i = 1; i <= 15; i += 1) {
+    for (std::size_t i = 2; i <= 9; i += 1) {
         coarse_steps.push_back(i);
     }
 
-    for (double i = 0.01; i <= 0.041; i += 0.005) {
-        learning_rates.push_back(i);
-    }
     for (double i = 0.05; i <= 0.091; i += 0.02) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.1; i <= 0.31; i += 0.2) {
+    for (double i = 0.1; i <= 0.51; i += 0.1) {
         learning_rates.push_back(i);
     }
 
@@ -228,7 +138,7 @@ void gradient_simple_analysis(const std::string output_filename, const std::vect
             std::cout << "cs: " << std::setw(2) << coarse_step << "    "
                       << "lr: " << std::setw(4) << learning_rate << "\n";
             save_csv_info_for_every_sample(output_csv, "gradient_simple", samples_data,
-                                           correct_results_vector, MusicOptimization::gradient_simple,
+                                           correct_results, MusicOptimization::gradient_simple,
                                            coarse_step, learning_rate, 0);
         }
     }
@@ -239,7 +149,7 @@ void gradient_simple_analysis(const std::string output_filename, const std::vect
 }
 
 void gradient_adapt_lr_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                                const std::vector<DoaAngles>& correct_results_vector) {
+                                const std::vector<DoaAngles>& correct_results) {
     std::ofstream output_csv;
     DoaEstimator estimator;
     std::vector<double> coarse_steps, learning_rates;
@@ -253,17 +163,14 @@ void gradient_adapt_lr_analysis(const std::string output_filename, const std::ve
         throw std::runtime_error("Error opening file " + output_name);
     }
 
-    for (std::size_t i = 1; i <= 15; i += 1) {
+    for (std::size_t i = 2; i <= 9; i += 1) {
         coarse_steps.push_back(i);
     }
 
-    for (double i = 0.01; i <= 0.091; i += 0.02) {
+    for (double i = 0.05; i <= 0.091; i += 0.02) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.095; i <= 0.451; i += 0.1) {
-        learning_rates.push_back(i);
-    }
-    for (double i = 0.5; i <= 0.91; i += 0.2) {
+    for (double i = 0.1; i <= 0.91; i += 0.1) {
         learning_rates.push_back(i);
     }
 
@@ -279,7 +186,7 @@ void gradient_adapt_lr_analysis(const std::string output_filename, const std::ve
             std::cout << "cs: " << std::setw(2) << coarse_step << "    "
                       << "lr: " << std::setw(4) << learning_rate << "\n";
             save_csv_info_for_every_sample(output_csv, "gradient_adapt_lr", samples_data,
-                                           correct_results_vector, MusicOptimization::gradient_adapt_lr,
+                                           correct_results, MusicOptimization::gradient_adapt_lr,
                                            coarse_step, learning_rate, 0);
         }
     }
@@ -290,7 +197,7 @@ void gradient_adapt_lr_analysis(const std::string output_filename, const std::ve
 }
 
 void gradient_momentum_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                                const std::vector<DoaAngles>& correct_results_vector) {
+                                const std::vector<DoaAngles>& correct_results) {
     std::ofstream output_csv;
     DoaEstimator estimator;
     std::vector<double> coarse_steps, learning_rates, momentums;
@@ -304,21 +211,18 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
         throw std::runtime_error("Error opening file " + output_name);
     }
 
-    for (std::size_t i = 1; i <= 15; i += 1) {
+    for (std::size_t i = 2; i <= 9; i += 1) {
         coarse_steps.push_back(i);
     }
 
-    for (double i = 0.01; i <= 0.041; i += 0.01) {
+    for (double i = 0.01; i <= 0.091; i += 0.02) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.05; i <= 0.091; i += 0.02) {
+    for (double i = 0.1; i <= 0.21; i += 0.1) {
         learning_rates.push_back(i);
     }
 
-    for (double i = 0.5; i <= 0.71; i += 0.2) {
-        momentums.push_back(i);
-    }
-    for (double i = 0.75; i <= 0.951; i += 0.05) {
+    for (double i = 0.70; i <= 0.951; i += 0.05) {
         momentums.push_back(i);
     }
 
@@ -338,7 +242,7 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
                           << "lr: " << std::setw(5) << std::left << learning_rate << "    "
                           << "mm: " << std::setw(4) << std::left << momentum << "\n";
                 save_csv_info_for_every_sample(output_csv, "gradient_momentum", samples_data,
-                                               correct_results_vector, MusicOptimization::gradient_momentum,
+                                               correct_results, MusicOptimization::gradient_momentum,
                                                coarse_step, learning_rate, momentum);
             }
         }
@@ -350,7 +254,7 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
 }
 
 void gradient_nesterov_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
-                                const std::vector<DoaAngles>& correct_results_vector) {
+                                const std::vector<DoaAngles>& correct_results) {
     std::ofstream output_csv;
     DoaEstimator estimator;
     std::vector<double> coarse_steps, learning_rates, momentums;
@@ -364,21 +268,18 @@ void gradient_nesterov_analysis(const std::string output_filename, const std::ve
         throw std::runtime_error("Error opening file " + output_name);
     }
 
-    for (std::size_t i = 1; i <= 15; i += 1) {
+    for (std::size_t i = 2; i <= 9; i += 1) {
         coarse_steps.push_back(i);
     }
 
-    for (double i = 0.01; i <= 0.0401; i += 0.01) {
+    for (double i = 0.01; i <= 0.091; i += 0.02) {
         learning_rates.push_back(i);
     }
-    for (double i = 0.05; i <= 0.091; i += 0.02) {
+    for (double i = 0.1; i <= 0.21; i += 0.1) {
         learning_rates.push_back(i);
     }
 
-    for (double i = 0.5; i <= 0.71; i += 0.2) {
-        momentums.push_back(i);
-    }
-    for (double i = 0.75; i <= 0.951; i += 0.05) {
+    for (double i = 0.70; i <= 0.951; i += 0.05) {
         momentums.push_back(i);
     }
 
@@ -398,7 +299,7 @@ void gradient_nesterov_analysis(const std::string output_filename, const std::ve
                           << "lr: " << std::setw(5) << std::left << learning_rate << "    "
                           << "mm: " << std::setw(4) << std::left << momentum << "\n";
                 save_csv_info_for_every_sample(output_csv, "gradient_nesterov", samples_data,
-                                               correct_results_vector, MusicOptimization::gradient_nesterov,
+                                               correct_results, MusicOptimization::gradient_nesterov,
                                                coarse_step, learning_rate, momentum);
             }
         }
@@ -534,28 +435,17 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
     return;
 }
 
-void get_training_data(std::vector<SamplesData>& training_samples_close, std::vector<DoaAngles>& training_results_close,
-                       std::vector<SamplesData>& training_samples_walk, std::vector<DoaAngles>& training_results_walk,
-                       std::vector<SamplesData>& training_samples_both, std::vector<DoaAngles>& training_results_both) {
+void get_training_data(std::vector<SamplesData>& training_samples, std::vector<DoaAngles>& training_results) {
 
-    std::vector<SamplesData> samples_data_close, samples_data_walk;
-    std::vector<DoaAngles> correct_results_close, correct_results_walk;
-    read_files::get_iq_samples(samples_data_close, (iq_samples_dir + close_filename));
+    std::vector<SamplesData> samples_data_walk;
+    std::vector<DoaAngles> correct_results_walk;
     read_files::get_iq_samples(samples_data_walk, (iq_samples_dir + walk_filename));
-    read_files::get_music_result_angles(correct_results_close, (music_results_dir + close_filename));
     read_files::get_music_result_angles(correct_results_walk, (music_results_dir + walk_filename));
 
-    for (std::size_t i = 0; i < samples_data_close.size(); i += training_stride) {
-        training_samples_close.push_back(samples_data_close[i]);
-        training_samples_walk.push_back(samples_data_walk[i]);
-        training_results_close.push_back(correct_results_close[i]);
-        training_results_walk.push_back(correct_results_walk[i]);
+    for (std::size_t i = 0; i < samples_data_walk.size(); i += training_stride) {
+        training_samples.push_back(samples_data_walk[i]);
+        training_results.push_back(correct_results_walk[i]);
     }
-
-    training_samples_both.insert(training_samples_both.end(), training_samples_close.begin(), training_samples_close.end());
-    training_samples_both.insert(training_samples_both.end(), training_samples_walk.begin(), training_samples_walk.end());
-    training_results_both.insert(training_results_both.end(), training_results_close.begin(), training_results_close.end());
-    training_results_both.insert(training_results_both.end(), training_results_walk.begin(), training_results_walk.end());
 
     return;
 }

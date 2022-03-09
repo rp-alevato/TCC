@@ -14,28 +14,25 @@
 
 const std::string iq_samples_dir = "data/iq_samples/";
 const std::string music_results_dir = "data/music_result_angles/";
-const std::string close_filename = "close.txt";
 const std::string walk_filename = "office_walk.txt";
 const std::string output_filename = "data/experimental_results/accuracy_runtime.csv";
 
-static constexpr double fine_step = M_PI / 1800;
+static constexpr double fine_step = M_PI / 900;
 
 void analysis(const std::vector<SamplesData>& samples_data, const std::vector<DoaAngles>& correct_results,
-              const std::string technique, const double coarse_step, const GradientSpecs gradient_specs);
-// Utility functions
-void get_data(std::vector<SamplesData>& samples_data, std::vector<DoaAngles>& correct_results);
-void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string technique_name,
-                                    const std::vector<SamplesData>& samples_data,
-                                    const std::vector<DoaAngles>& correct_results,
+              const std::string technique_name, const double coarse_step, const GradientSpecs gradient_specs);
+void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::vector<SamplesData>& samples_data,
+                                    const std::vector<DoaAngles>& correct_results, const std::string technique_name,
                                     const DoaTechnique doa_technique, const MusicSearch music_search,
-                                    const MusicOptimization optimization,
-                                    const double coarse_step, const GradientSpecs gradient_specs);
+                                    const MusicOptimization optimization, const double coarse_step,
+                                    const GradientSpecs gradient_specs);
+
 int main() {
     // Get Data
     std::vector<SamplesData> samples_data;
     std::vector<DoaAngles> correct_results;
-    GradientSpecs gradient_specs = {0, 0, 0, 0};
-    double coarse_step = 3;
+    GradientSpecs gradient_specs;
+    double coarse_step;
     std::string technique;
 
     std::ofstream output_csv;
@@ -46,7 +43,8 @@ int main() {
     output_csv << "technique,coarse_step,learning_rate,momentum,runtime,mae_len,rmse_len\n";
     output_csv.close();
 
-    get_data(samples_data, correct_results);
+    read_files::get_iq_samples(samples_data, (iq_samples_dir + walk_filename));
+    read_files::get_music_result_angles(correct_results, (music_results_dir + walk_filename));
 
     technique = "esprit";
     coarse_step = 0;
@@ -59,23 +57,23 @@ int main() {
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_simple";
-    coarse_step = 3;
-    gradient_specs = {1e-5, 1.5e-8, 0.025, 0};
+    coarse_step = 5;
+    gradient_specs = {1e-5, 1.5e-8, 0.1, 0};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_adapt_lr";
-    coarse_step = 8;
-    gradient_specs = {1e-5, 1.5e-8, 0.15, 0};
+    coarse_step = 5;
+    gradient_specs = {1e-5, 1.5e-8, 0.5, 0};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_momentum";
-    coarse_step = 8;
-    gradient_specs = {1e-5, 1.5e-8, 0.015, 0.95};
+    coarse_step = 5;
+    gradient_specs = {1e-5, 1.5e-8, 0.07, 0.85};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_nesterov";
-    coarse_step = 8;
-    gradient_specs = {1e-5, 1.5e-8, 0.01, 0.95};
+    coarse_step = 5;
+    gradient_specs = {1e-5, 1.5e-8, 0.05, 0.9};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_fine_grid_search";
@@ -131,24 +129,18 @@ void analysis(const std::vector<SamplesData>& samples_data, const std::vector<Do
     }
 
     std::cout << "Calculating " << technique_name << "...\n";
-    save_csv_info_for_every_sample(output_csv, technique_name, samples_data, correct_results, doa_technique,
+    save_csv_info_for_every_sample(output_csv, samples_data, correct_results, technique_name, doa_technique,
                                    music_search, music_optimization, coarse_step, gradient_specs);
-
     output_csv.close();
 
     return;
 }
 
-// ****************************************************************************
-// ****************************  UTILITY FUNCTONS *****************************
-// ****************************************************************************
-
-void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string technique_name,
-                                    const std::vector<SamplesData>& samples_data,
-                                    const std::vector<DoaAngles>& correct_results,
+void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::vector<SamplesData>& samples_data,
+                                    const std::vector<DoaAngles>& correct_results, const std::string technique_name,
                                     const DoaTechnique doa_technique, const MusicSearch music_search,
-                                    const MusicOptimization optimization,
-                                    const double coarse_step, const GradientSpecs gradient_specs) {
+                                    const MusicOptimization optimization, const double coarse_step,
+                                    const GradientSpecs gradient_specs) {
     auto double_precision = std::numeric_limits<double>::digits10;
     std::vector<double> errors;
     std::vector<DoaAngles> results;
@@ -195,28 +187,6 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
     output_csv << std::setprecision(double_precision) << runtime << ",";
     output_csv << std::setprecision(double_precision) << mae_len << ",";
     output_csv << std::setprecision(double_precision) << rmse_len << "\n";
-
-    return;
-}
-
-void get_data(std::vector<SamplesData>& samples_data, std::vector<DoaAngles>& correct_results) {
-    std::vector<SamplesData> samples_data_close, samples_data_walk;
-    std::vector<DoaAngles> correct_results_close, correct_results_walk;
-
-    read_files::get_iq_samples(samples_data_close, (iq_samples_dir + close_filename));
-    read_files::get_iq_samples(samples_data_walk, (iq_samples_dir + walk_filename));
-    read_files::get_music_result_angles(correct_results_close, (music_results_dir + close_filename));
-    read_files::get_music_result_angles(correct_results_walk, (music_results_dir + walk_filename));
-
-    samples_data.insert(samples_data.end(), samples_data_close.begin(), samples_data_close.end());
-    samples_data.insert(samples_data.end(), samples_data_walk.begin(), samples_data_walk.end());
-    correct_results.insert(correct_results.end(), correct_results_close.begin(), correct_results_close.end());
-    correct_results.insert(correct_results.end(), correct_results_walk.begin(), correct_results_walk.end());
-
-    std::vector<SamplesData>().swap(samples_data_close);
-    std::vector<SamplesData>().swap(samples_data_walk);
-    std::vector<DoaAngles>().swap(correct_results_close);
-    std::vector<DoaAngles>().swap(correct_results_walk);
 
     return;
 }
