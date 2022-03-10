@@ -15,7 +15,7 @@
 const std::string iq_samples_dir = "data/iq_samples/";
 const std::string music_results_dir = "data/music_result_angles/";
 const std::string walk_filename = "office_walk.txt";
-const std::string output_filename = "data/experimental_results/accuracy_runtime2.csv";
+const std::string output_filename = "data/experimental_results/accuracy_runtime.csv";
 
 static constexpr double fine_step = M_PI / 360;
 
