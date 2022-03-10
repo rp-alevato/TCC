@@ -15,9 +15,9 @@
 const std::string iq_samples_dir = "data/iq_samples/";
 const std::string music_results_dir = "data/music_result_angles/";
 const std::string walk_filename = "office_walk.txt";
-const std::string output_filename = "data/experimental_results/accuracy_runtime.csv";
+const std::string output_filename = "data/experimental_results/accuracy_runtime3.csv";
 
-static constexpr double fine_step = M_PI / 900;
+static constexpr double fine_step = M_PI / 360;
 
 void analysis(const std::vector<SamplesData>& samples_data, const std::vector<DoaAngles>& correct_results,
               const std::string technique_name, const double coarse_step, const GradientSpecs gradient_specs);
@@ -52,28 +52,28 @@ int main() {
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_coarse_fine_grid_search";
-    coarse_step = 3;
+    coarse_step = 5;
     gradient_specs = {0, 0, 0, 0};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_simple";
-    coarse_step = 5;
-    gradient_specs = {1e-5, 1.5e-8, 0.09, 0};
+    coarse_step = 7;
+    gradient_specs = {1e-4, 1.5e-8, 0.1, 0};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_adapt_lr";
-    coarse_step = 5;
-    gradient_specs = {1e-5, 1.5e-8, 0.5, 0};
+    coarse_step = 8;
+    gradient_specs = {1e-4, 1.5e-8, 0.6, 0};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_momentum";
-    coarse_step = 5;
-    gradient_specs = {1e-5, 1.5e-8, 0.07, 0.85};
+    coarse_step = 8;
+    gradient_specs = {1e-4, 1.5e-8, 0.09, 0.85};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_nesterov";
-    coarse_step = 5;
-    gradient_specs = {1e-5, 1.5e-8, 0.05, 0.9};
+    coarse_step = 8;
+    gradient_specs = {1e-4, 1.5e-8, 0.05, 0.9};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_fine_grid_search";
