@@ -15,7 +15,7 @@
 const std::string iq_samples_dir = "data/iq_samples/";
 const std::string music_results_dir = "data/music_result_angles/";
 const std::string walk_filename = "office_walk.txt";
-const std::string output_filename = "data/experimental_results/accuracy_runtime3.csv";
+const std::string output_filename = "data/experimental_results/accuracy_runtime2.csv";
 
 static constexpr double fine_step = M_PI / 360;
 
@@ -57,22 +57,22 @@ int main() {
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_simple";
-    coarse_step = 7;
-    gradient_specs = {1e-4, 1.5e-8, 0.1, 0};
+    coarse_step = 5;
+    gradient_specs = {1e-4, 1.5e-8, 0.09, 0};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_adapt_lr";
-    coarse_step = 8;
+    coarse_step = 5;
     gradient_specs = {1e-4, 1.5e-8, 0.6, 0};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_momentum";
-    coarse_step = 8;
-    gradient_specs = {1e-4, 1.5e-8, 0.09, 0.85};
+    coarse_step = 5;
+    gradient_specs = {1e-4, 1.5e-8, 0.1, 0.8};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 
     technique = "music_gradient_nesterov";
-    coarse_step = 8;
+    coarse_step = 5;
     gradient_specs = {1e-4, 1.5e-8, 0.05, 0.9};
     analysis(samples_data, correct_results, technique, coarse_step, gradient_specs);
 

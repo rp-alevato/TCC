@@ -18,7 +18,7 @@ const std::string walk_filename = "office_walk.txt";
 const std::string output_dir = "data/experimental_results/hyperparameters/";
 
 static constexpr std::size_t training_stride = 5;
-static constexpr double fine_step = M_PI / 360;
+static constexpr double fine_step = M_PI / 600;
 
 void coarse_fine_search_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
                                  const std::vector<DoaAngles>& correct_results);
