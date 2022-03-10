@@ -18,7 +18,7 @@ const std::string walk_filename = "office_walk.txt";
 const std::string output_dir = "data/experimental_results/hyperparameters/";
 
 static constexpr std::size_t training_stride = 5;
-static constexpr double fine_step = M_PI / 900;
+static constexpr double fine_step = M_PI / 360;
 
 void coarse_fine_search_analysis(const std::string output_filename, const std::vector<SamplesData>& samples_data,
                                  const std::vector<DoaAngles>& correct_results);
@@ -322,7 +322,7 @@ void save_csv_info_for_every_sample(std::ofstream& output_csv, const std::string
     std::vector<double> errors_len, errors_az, errors_el;
     std::vector<DoaAngles> results;
     DoaEstimator estimator;
-    GradientSpecs gradient_specs = {1e-5, 1.5e-8, learning_rate, momentum};
+    GradientSpecs gradient_specs = {1e-4, 1.5e-8, learning_rate, momentum};
     double coarse_step_pi = utility::angle_to_pi(coarse_step);
 
     // Estimate angles
