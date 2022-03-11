@@ -114,7 +114,7 @@ void gradient_simple_analysis(const std::string output_filename, const std::vect
         throw std::runtime_error("Error opening file " + output_name);
     }
 
-    for (std::size_t i = 2; i <= 9; i += 1) {
+    for (std::size_t i = 2; i <= 15; i += 1) {
         coarse_steps.push_back(i);
     }
 
@@ -162,7 +162,7 @@ void gradient_adapt_lr_analysis(const std::string output_filename, const std::ve
         throw std::runtime_error("Error opening file " + output_name);
     }
 
-    for (std::size_t i = 2; i <= 9; i += 1) {
+    for (std::size_t i = 2; i <= 15; i += 1) {
         coarse_steps.push_back(i);
     }
 
@@ -210,7 +210,7 @@ void gradient_momentum_analysis(const std::string output_filename, const std::ve
         throw std::runtime_error("Error opening file " + output_name);
     }
 
-    for (std::size_t i = 2; i <= 9; i += 1) {
+    for (std::size_t i = 2; i <= 15; i += 1) {
         coarse_steps.push_back(i);
     }
 
@@ -267,7 +267,7 @@ void gradient_nesterov_analysis(const std::string output_filename, const std::ve
         throw std::runtime_error("Error opening file " + output_name);
     }
 
-    for (std::size_t i = 2; i <= 9; i += 1) {
+    for (std::size_t i = 2; i <= 15; i += 1) {
         coarse_steps.push_back(i);
     }
 
