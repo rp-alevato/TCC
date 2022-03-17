@@ -58,22 +58,25 @@ static int32_t IQCount = 0;
  * Static Function Declarations
  **************************************************************************************************/
 
-static void bgWaitNewEvent(struct gecko_cmd_packet** evt);
-static void bgProcessEvent(struct gecko_cmd_packet* evt);
+static void bgWaitNewEvent(struct gecko_cmd_packet **evt);
+static void bgProcessEvent(struct gecko_cmd_packet *evt);
 
 /***************************************************************************************************
  * Public Function Definitions
  **************************************************************************************************/
 
-void bgInit(void* args) {
-    if (!bgInitialized) {
+void bgInit(void *args)
+{
+    if (!bgInitialized)
+    {
         printf("BGLIB init...\r\n");
 
         // Initialize BGLIB with our output function for sending messages
         BGLIB_INITIALIZE_NONBLOCK(on_message_send, uartRx, uartRxPeek);
 
         // Initialise serial communication as non-blocking
-        if (appSerialPortInit(((arguments_t*)args)->argc, ((arguments_t*)args)->argv, 100) < 0) {
+        if (appSerialPortInit(((arguments_t *)args)->argc, ((arguments_t *)args)->argv, 100) < 0)
+        {
             printf("Non-blocking serial port init failure\n");
             exit(EXIT_FAILURE);
         }
@@ -85,11 +88,13 @@ void bgInit(void* args) {
     }
 }
 
-THREAD_RETURN_T bgMain(void* args) {
-    struct gecko_cmd_packet* evt;
+THREAD_RETURN_T bgMain(void *args)
+{
+    struct gecko_cmd_packet *evt;
 
     // If not initialized, initialize
-    if (!bgInitialized) {
+    if (!bgInitialized)
+    {
         bgInit(args);
     }
 
@@ -98,7 +103,8 @@ THREAD_RETURN_T bgMain(void* args) {
     // Reset NCP to ensure it gets into a defined state
     gecko_cmd_system_reset(0);
 
-    while (eAppCtrl != eAOX_SHUTDOWN) {
+    while (eAppCtrl != eAOX_SHUTDOWN)
+    {
         // Wait for new Bluetooth stack event
         bgWaitNewEvent(&evt);
 
@@ -120,18 +126,24 @@ THREAD_RETURN_T bgMain(void* args) {
  * Static Function Definitions
  **************************************************************************************************/
 
-uint8_t reference_mac[6] = {0X9C, 0x41, 0xA5, 0x81, 0x8E, 0x58};
-bool is_mac_equal(uint8_t* mac_address, uint8_t* reference_mac) {
+uint8_t reference_mac[6] = {0xA3, 0x4E, 0xA5, 0x81, 0x8E, 0x58};
+// uint8_t reference_mac[6] = {0x58, 0x8E, 0x81, 0xA5, 0x4E, 0xA3};
+// uint8_t reference_mac[6] = {0x9C, 0x41, 0xA5, 0x81, 0x8E, 0x58};
+bool is_mac_equal(uint8_t *mac_address, uint8_t *reference_mac)
+{
     bool is_equal = true;
-    for (int n = 0; n < 6; n++) {
-        if (mac_address[n] != reference_mac[n]) {
+    for (int n = 0; n < 6; n++)
+    {
+        if (mac_address[n] != reference_mac[n])
+        {
             is_equal = false;
         }
     }
     return is_equal;
 }
 
-static void bgWaitNewEvent(struct gecko_cmd_packet** evt) {
+static void bgWaitNewEvent(struct gecko_cmd_packet **evt)
+{
     // Make sure we do not read events while command responses are read
     ENTER_MUTEX(&bgBufferCriticalSection);
     // Wait for next Bluetooth event
@@ -140,100 +152,113 @@ static void bgWaitNewEvent(struct gecko_cmd_packet** evt) {
     EXIT_MUTEX(&bgBufferCriticalSection);
 }
 
-static void bgProcessEvent(struct gecko_cmd_packet* evt) {
+static void bgProcessEvent(struct gecko_cmd_packet *evt)
+{
     // If nothing to handle, return
-    if (NULL == evt) {
+    if (NULL == evt)
+    {
         return;
     }
 
     // Do not handle any events until system is booted up properly
-    if ((BGLIB_MSG_ID(evt->header) != gecko_evt_system_boot_id) && (false == appBooted)) {
+    if ((BGLIB_MSG_ID(evt->header) != gecko_evt_system_boot_id) && (false == appBooted))
+    {
         printf("Event: 0x%04x\n", BGLIB_MSG_ID(evt->header));
         return;
     }
 
     // Handle events
-    switch (BGLIB_MSG_ID(evt->header)) {
+    switch (BGLIB_MSG_ID(evt->header))
+    {
 
-        // This boot event is generated when the system boots up after reset
-        case gecko_evt_system_boot_id: {
-            appBooted = true;
-            printf("System booted. Looking for tags... \r\n");
-            fflush(stdout);
+    // This boot event is generated when the system boots up after reset
+    case gecko_evt_system_boot_id:
+    {
+        appBooted = true;
+        printf("System booted. Looking for tags... \r\n");
+        fflush(stdout);
 
-            // Set scan interval and scan window
-            gecko_cmd_le_gap_set_discovery_timing(le_gap_phy_1m, SCAN_INTERVAL, SCAN_WINDOW);
-            // // Start scanning
-            gecko_cmd_le_gap_start_discovery(1, 2);
-            // // Configure CTE receiver
-            gecko_cmd_cte_receiver_configure(0x00);
+        // Set scan interval and scan window
+        gecko_cmd_le_gap_set_discovery_timing(le_gap_phy_1m, SCAN_INTERVAL, SCAN_WINDOW);
+        // // Start scanning
+        gecko_cmd_le_gap_start_discovery(1, 2);
+        // // Configure CTE receiver
+        gecko_cmd_cte_receiver_configure(0x00);
 
-            uint8_t slot_durations = 1;
-            uint8_t cte_count = 1;
-            // Start Silabs CTE receiver IQ sampling
-            gecko_cmd_cte_receiver_enable_silabs_cte(slot_durations, cte_count, sizeof(antenna_array), antenna_array);
+        uint8_t slot_durations = 1;
+        uint8_t cte_count = 1;
+        // Start Silabs CTE receiver IQ sampling
+        gecko_cmd_cte_receiver_enable_silabs_cte(slot_durations, cte_count, sizeof(antenna_array), antenna_array);
+    }
+    break;
 
-        } break;
+    case gecko_evt_le_gap_scan_response_id:
+    {
+        bd_addr a = evt->data.evt_le_gap_scan_response.address;
+        printf("scan response %d %d %d \n", a.addr[0], a.addr[1], a.addr[2]);
+        fflush(stdout);
+    }
+    break;
 
-        case gecko_evt_le_gap_scan_response_id: {
-            bd_addr a = evt->data.evt_le_gap_scan_response.address;
-            printf("scan response %d %d %d \n", a.addr[0], a.addr[1], a.addr[2]);
-            fflush(stdout);
-        } break;
+    // This event is generated when IQ samples are ready
+    case gecko_evt_cte_receiver_silabs_iq_report_id:
+    {
 
-        // This event is generated when IQ samples are ready
-        case gecko_evt_cte_receiver_silabs_iq_report_id: {
+        if (is_mac_equal(evt->data.evt_cte_receiver_silabs_iq_report.address.addr, reference_mac))
+        {
 
-            if (is_mac_equal(evt->data.evt_cte_receiver_silabs_iq_report.address.addr, reference_mac)) {
+            // printf("IQ count: %d\n", IQCount);
+            // IQCount++;
 
-                // printf("IQ count: %d\n", IQCount);
-                // IQCount++;
+            uint32_t slen = evt->data.evt_cte_receiver_silabs_iq_report.samples.len;
 
-                uint32_t slen = evt->data.evt_cte_receiver_silabs_iq_report.samples.len;
+            // Make sure we do not write the IQ sample buffer while the AoX thread is reading it
+            ENTER_MUTEX(&iqSamplesCriticalSection);
 
-                // Make sure we do not write the IQ sample buffer while the AoX thread is reading it
-                ENTER_MUTEX(&iqSamplesCriticalSection);
+            // Write auxiliary info into the IQ sample buffer
+            iqSamplesBuffer.connection = 0;
+            iqSamplesBuffer.channel = evt->data.evt_cte_receiver_silabs_iq_report.channel;
+            iqSamplesBuffer.rssi = evt->data.evt_cte_receiver_silabs_iq_report.rssi;
 
-                // Write auxiliary info into the IQ sample buffer
-                iqSamplesBuffer.connection = 0;
-                iqSamplesBuffer.channel = evt->data.evt_cte_receiver_silabs_iq_report.channel;
-                iqSamplesBuffer.rssi = evt->data.evt_cte_receiver_silabs_iq_report.rssi;
-
-                if (evt->data.evt_cte_receiver_silabs_iq_report.samples.len > 0) {
-                    uint32_t index;
-                    index = 0;
-                    // Write reference IQ samples into the IQ sample buffer (sampled on one antenna)
-                    for (uint32_t sample = 0; sample < ref_period_samples; ++sample) {
-                        iqSamplesBuffer.ref_i_samples[0][sample] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
-                        if (index == slen)
-                            break;
-                        iqSamplesBuffer.ref_q_samples[0][sample] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
-                        if (index == slen)
-                            break;
-                    }
-
-                    index = ref_period_samples * 2;
-                    // Write antenna IQ samples into the IQ sample buffer (sampled on all antennas)
-                    for (uint32_t snapshot = 0; snapshot < numSnapshots; ++snapshot) {
-                        for (uint32_t antenna = 0; antenna < numArrayElements; ++antenna) {
-                            iqSamplesBuffer.i_samples[snapshot][antenna] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
-                            if (index == slen)
-                                break;
-                            iqSamplesBuffer.q_samples[snapshot][antenna] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
-                            if (index == slen)
-                                break;
-                        }
-                        if (index == slen)
-                            break;
-                    }
+            if (evt->data.evt_cte_receiver_silabs_iq_report.samples.len > 0)
+            {
+                uint32_t index;
+                index = 0;
+                // Write reference IQ samples into the IQ sample buffer (sampled on one antenna)
+                for (uint32_t sample = 0; sample < ref_period_samples; ++sample)
+                {
+                    iqSamplesBuffer.ref_i_samples[0][sample] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
+                    if (index == slen)
+                        break;
+                    iqSamplesBuffer.ref_q_samples[0][sample] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
+                    if (index == slen)
+                        break;
                 }
 
-                // Notify AoX thread about the new samples
-                CONDITION_MET(&newSamplesAvailable);
-                // Now the AoX thread can read the IQ sample buffer
-                EXIT_MUTEX(&iqSamplesCriticalSection);
+                index = ref_period_samples * 2;
+                // Write antenna IQ samples into the IQ sample buffer (sampled on all antennas)
+                for (uint32_t snapshot = 0; snapshot < numSnapshots; ++snapshot)
+                {
+                    for (uint32_t antenna = 0; antenna < numArrayElements; ++antenna)
+                    {
+                        iqSamplesBuffer.i_samples[snapshot][antenna] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
+                        if (index == slen)
+                            break;
+                        iqSamplesBuffer.q_samples[snapshot][antenna] = ((int8_t)(uint8_t)(evt->data.evt_cte_receiver_silabs_iq_report.samples.data[index++])) / 127.0;
+                        if (index == slen)
+                            break;
+                    }
+                    if (index == slen)
+                        break;
+                }
             }
 
-        } break;
+            // Notify AoX thread about the new samples
+            CONDITION_MET(&newSamplesAvailable);
+            // Now the AoX thread can read the IQ sample buffer
+            EXIT_MUTEX(&iqSamplesCriticalSection);
+        }
+    }
+    break;
     }
 }

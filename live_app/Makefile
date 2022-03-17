@@ -96,7 +96,7 @@ INCLUDEPATHS += \
 -I../src \
 -I../lib/eigen
 
-override CFLAGS += -fpermissive -std=c++17 -lutil -Wall -std=c++17 -march=native
+override CFLAGS += -fpermissive -std=c++17 -lutil -Wall -std=c++17 -march=native -fopenmp
 
 # -MMD : Don't generate dependencies on system header files.
 # -MP  : Add phony targets, useful when a h-file is removed from a project.
@@ -202,7 +202,8 @@ src/gecko_bglib.cpp \
 src/main.cpp \
 src/bg.cpp \
 src/aox.cpp \
-../src/doa/estimator.cpp
+../src/doa/estimator.cpp \
+../src/misc/utility.cpp
 
 # this file should be the last added
 C_SRC += src/uart_posix.cpp
@@ -237,7 +238,7 @@ vpath %.S $(S_PATHS)
 # Default build is debug build
 all:      debug
 
-debug:    CFLAGS += -O0 -g3
+debug:    CFLAGS += -O2 -g3
 debug:    $(EXE_DIR)/$(PROJECTNAME)
 
 release:  $(EXE_DIR)/$(PROJECTNAME)
@@ -263,7 +264,7 @@ $(OBJ_DIR)/%.o: %.S
 # Link
 $(EXE_DIR)/$(PROJECTNAME): $(OBJS) $(LIBS)
 	@echo -e "\033[1;32m[Linking $@]\033[0m"
-	$(CC) $^ $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 	@echo -e  "\033[1;32m[Finished $@]\033[0m"
 
 # Copy the libraries

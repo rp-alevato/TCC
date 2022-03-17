@@ -30,6 +30,7 @@
 #include "aox.h"
 #include "bg_types.h"
 #include "doa/estimator.h"
+#include "misc/utility.h"
 
 extern "C" {
 #include "sl_rtl_clib_api.h"
@@ -119,18 +120,10 @@ void aoxInit(void* args) {
 }
 
 THREAD_RETURN_T aoxMain(void* args) {
-    double azimuth;
-    double elevation;
-    uint32_t qualityResult;
-
     // If not initialized, initialize
     if (!aox_initialized) {
         aoxInit(args);
     }
-
-    // Define and initialize custom AoA estimator
-    DoaEstimator estimator;
-    DoaAngles angles;
 
     while (eAppCtrl != eAOX_SHUTDOWN) {
         // Wait for new IQ samples
@@ -161,7 +154,7 @@ THREAD_RETURN_T aoxMain(void* args) {
 
 static void aoxWaitNewSamples() {
     static int n_samples_saved = 0;
-    static constexpr int first_samples_discarded = 10;
+    static constexpr int first_samples_discarded = 100;
     static constexpr int max_samples_saved = (10000 + first_samples_discarded);
 
     // Make sure IQ sample buffer is not read while BG thread is writing it
@@ -171,8 +164,6 @@ static void aoxWaitNewSamples() {
 
     iqSamples.channel = iqSamplesBuffer.channel;
     iqSamples.rssi = iqSamplesBuffer.rssi;
-
-    // Open file to append IQs
 
     samples_data.channel_frequency = calcFrequencyFromChannel(iqSamplesBuffer.channel);
 
@@ -184,6 +175,7 @@ static void aoxWaitNewSamples() {
     }
 
     // Copy IQ samples from buffer into working copy
+
     for (int i = 0; i < numArrayElements; ++i) {
         for (int j = 0; j < numSnapshots; ++j) {
             iqSamples.i_samples[j][i] = iqSamplesBuffer.i_samples[j][i];
@@ -192,13 +184,20 @@ static void aoxWaitNewSamples() {
         }
     }
 
-    // // Process new IQ Samples using the custom AoA estimator
-    // static DoaEstimator estimator;
-    // DoaAngles angles;
-    // estimator.load_samples(samples_data);
-    // angles = estimator.process_samples(DoaTechnique::music, MusicSearch::linear_grid_gradient, M_PI / 10);
-    // printf("Azimuth: %6.1f  \tElevation: %6.1f  \trssi: %6.0f \tch: %2d\n",
-    //        (angles.azimuth * 180 / M_PI), (angles.elevation * 180 / M_PI), iqSamples.rssi / 1.0, iqSamples.channel);
+    // Process new IQ Samples using the custom AoA estimator
+    static DoaEstimator estimator;
+    DoaAngles angles;
+    // angles = estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::simple_grid, M_PI / 600);
+    angles = estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::coarse_grid, M_PI / 600,
+                                       MusicOptimization::fine_grid_search, M_PI / 60);
+    // angles = estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::coarse_grid, 0,
+    //                                    MusicOptimization::gradient_simple, M_PI / 60, {1e-4, 1.5e-8, 0.1, 0});
+    // angles = estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::coarse_grid, 0,
+    //                                    MusicOptimization::gradient_adapt_lr, M_PI / 60, {1e-4, 1.5e-8, 0.8, 0});
+    // angles = estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::coarse_grid, 0,
+    //                                    MusicOptimization::gradient_momentum, M_PI / 60, {1e-4, 1.5e-8, 0.1, 0.80});
+    // angles = estimator.process_samples(samples_data, DoaTechnique::music, MusicSearch::coarse_grid, 0,
+    //                                    MusicOptimization::gradient_nesterov, M_PI / 60, {1e-4, 1.5e-8, 0.05, 0.90});
 
     // Process new IQ samples and calculate Angle of Arrival(azimuth, elevation)
     float phase_rotation, azimuth_float, elevation_float;
@@ -209,49 +208,56 @@ static void aoxWaitNewSamples() {
         float distance;
         sl_rtl_aox_calculate_iq_sample_phase_rotation(&libitem, 2.0f, iqSamples.ref_i_samples[0], iqSamples.ref_q_samples[0], ref_period_samples, &phase_rotation);
         // Calculate distance from RSSI, and calculate a rough position estimation
-        sl_rtl_util_rssi2distance(TAG_TX_POWER, iqSamples.rssi / 1.0, &distance);
+        sl_rtl_util_rssi2distance(TAG_TX_POWER, (float)iqSamples.rssi, &distance);
         sl_rtl_util_filter(&util_libitem, distance, &distance);
     }
 
     if (qualityResult == 0 && n_samples_saved < max_samples_saved) {
-        // Print out Silabs results
-        printf("azimuth: %6.1f  \televation: %6.1f  \trssi: %6.0f \tch: %2d\n",
-               azimuth_float, elevation_float, iqSamples.rssi / 1.0, iqSamples.channel);
-        // Save samples data
-        n_samples_saved++;
-        if (n_samples_saved > first_samples_discarded) {
-            std::ofstream iq_file;
-            iq_file.open("iq_samples.txt", std::ios_base::app);
+        // Print out results
+        angles = utility::angles_to_degree(angles);
+        angles.azimuth = utility::normalize_angle_180(angles.azimuth);
+        angles.elevation = utility::normalize_angle_180(angles.elevation);
+        printf("Azimuth: %6.1f  \tElevation: %6.1f  \trssi: %4.0f\r",
+               (angles.azimuth), (angles.elevation), (float)iqSamples.rssi);
+        fflush(stdout);
+        // // Print out Silabs results
+        // printf("azimuth: %6.1f  \televation: %6.1f  \trssi: %6.0f\n",
+        //        azimuth_float, elevation_float, (float)iqSamples.rssi);
+        // // Save samples data
+        // n_samples_saved++;
+        // if (n_samples_saved > first_samples_discarded) {
+        //     std::ofstream iq_file;
+        //     iq_file.open("iq_samples.txt", std::ios_base::app);
 
-            iq_file << "channel frequency: " << samples_data.channel_frequency << "\n";
-            iq_file << "rssi: " << iqSamples.rssi << "\n";
-            iq_file << "phase rotation: " << phase_rotation << "\n";
-            iq_file << "azimuth, elevation: (" << azimuth_float << ", " << elevation_float << ")\n";
+        //     iq_file << "channel frequency: " << samples_data.channel_frequency << "\n";
+        //     iq_file << "rssi: " << iqSamples.rssi << "\n";
+        //     iq_file << "phase rotation: " << phase_rotation << "\n";
+        //     iq_file << "azimuth, elevation: (" << azimuth_float << ", " << elevation_float << ")\n";
 
-            iq_file << "reference samples:\n";
-            for (int i = 0; i < ref_period_samples; ++i) {
-                iq_file << "(" << iqSamples.ref_i_samples[0][i] << "," << iqSamples.ref_q_samples[0][i] << ")\n";
-            }
+        //     iq_file << "reference samples:\n";
+        //     for (int i = 0; i < ref_period_samples; ++i) {
+        //         iq_file << "(" << iqSamples.ref_i_samples[0][i] << "," << iqSamples.ref_q_samples[0][i] << ")\n";
+        //     }
 
-            iq_file << "samples:\n";
-            for (int i = 0; i < numArrayElements; ++i) {
-                for (int j = 0; j < numSnapshots; ++j) {
-                    iq_file << "(" << iqSamples.i_samples[j][i] << "," << iqSamples.q_samples[j][i] << ")";
-                    if (j < (numSnapshots - 1)) {
-                        iq_file << ", ";
-                    } else {
-                        iq_file << "\n";
-                    }
-                }
-            }
-            iq_file << "\n";
-        }
+        //     iq_file << "samples:\n";
+        //     for (int i = 0; i < numArrayElements; ++i) {
+        //         for (int j = 0; j < numSnapshots; ++j) {
+        //             iq_file << "(" << iqSamples.i_samples[j][i] << "," << iqSamples.q_samples[j][i] << ")";
+        //             if (j < (numSnapshots - 1)) {
+        //                 iq_file << ", ";
+        //             } else {
+        //                 iq_file << "\n";
+        //             }
+        //         }
+        //     }
+        //     iq_file << "\n";
+        // }
     }
 
-    // Now IQ sample buffer can be written by BG thread again
-    if (n_samples_saved >= max_samples_saved) {
-        std::cout << "Collected " << (max_samples_saved - first_samples_discarded) << " samples. No more samples to collect.\n";
-    }
+    // // Now IQ sample buffer can be written by BG thread again
+    // if (n_samples_saved >= max_samples_saved) {
+    //     std::cout << "Collected " << (max_samples_saved - first_samples_discarded) << " samples. No more samples to collect.\n";
+    // }
     EXIT_MUTEX(&iqSamplesCriticalSection);
 }
 
